@@ -1,113 +1,32 @@
-// import { useEffect, useCallback, useState } from 'react';
-// import useSWRInfinite, { SWRInfiniteKeyLoader } from 'swr/infinite';
-// import { useInView } from 'react-intersection-observer';
-
-// interface InfiniteScrollOptions<T> {
-//   fetchData: (key: string) => Promise<{ items: T[]; totalCount: number }>;
-//   initialTotalCount: number | null;
-//   revalidateKey: string;
-// }
-
-// export function useInfiniteScroll<T>({
-//   fetchData,
-//   initialTotalCount,
-//   revalidateKey,
-// }: InfiniteScrollOptions<T>) {
-//   const { ref, inView } = useInView({
-//     threshold: 0.1, // Trigger when 10% of the element is visible
-//     rootMargin: '100px' // Start loading 100px before the element is visible
-//   });
-//   const [totalCount, setTotalCount] = useState<number | null>(initialTotalCount);
-//   const [isMounted, setIsMounted] = useState(false);
-
-//   useEffect(() => {
-//     setIsMounted(true);
-//     return () => setIsMounted(false);
-//   }, []);
-
-//   const getKey: SWRInfiniteKeyLoader = useCallback(
-//     (pageIndex, previousPageData) => {
-//       // Don't fetch if not mounted or no total count yet
-//       if (!isMounted || totalCount === null) return null;
-      
-//       // Reached the end
-//       if (previousPageData && !previousPageData.items.length) return null;
-      
-//       // Generate key with page index
-//       return `${revalidateKey}-page-${pageIndex}`;
-//     },
-//     [isMounted, totalCount, revalidateKey]
-//   );
-
-//   const {
-//     data: pages,
-//     error,
-//     isValidating: isLoading,
-//     size,
-//     setSize,
-//     mutate,
-//   } = useSWRInfinite(getKey, fetchData, {
-//     revalidateFirstPage: false,
-//     revalidateOnFocus: false,
-//     revalidateOnReconnect: true,
-//     persistSize: false, // Changed to false to prevent caching issues
-//   });
-
-//   useEffect(() => {
-//     if (isMounted && inView && !isLoading && totalCount !== null) {
-//       const currentItemCount = pages?.reduce(
-//         (total, page) => total + (page?.items?.length || 0),
-//         0
-//       ) || 0;
-
-//       if (currentItemCount < totalCount) {
-//         setSize((prev) => prev + 1);
-//       }
-//     }
-//   }, [inView, isLoading, totalCount, pages, setSize, isMounted]);
-
-//   return {
-//     ref,
-//     pages,
-//     error,
-//     isLoading,
-//     size,
-//     setSize,
-//     mutate,
-//     setTotalCount,
-//     totalCount
-//   };
-// }
-
-
-
-
 
 
 import { useEffect, useCallback, useState } from 'react';
 import useSWRInfinite, { SWRInfiniteKeyLoader } from 'swr/infinite';
 import { useInView } from 'react-intersection-observer';
-import { listings } from '../contracts/listingInfo';
-import useListingsStore from "./useListingMutateStore";
+// import { listings } from '../contracts/listingInfo';
+// import useInfiniteScrollStore from "./useInfiniteScrollStore";
 
 
 interface InfiniteScrollOptions<T> {
   fetchData: (key: string) => Promise<{ items: T[]; totalCount: number }>;
   initialTotalCount: number | null;
   revalidateKey: string;
+  getTotalCount?: () => Promise<number | null>;
 }
 
 export function useInfiniteScroll<T>({
   fetchData,
   initialTotalCount,
   revalidateKey,
+  getTotalCount,
 }: InfiniteScrollOptions<T>) {
   const { ref, inView } = useInView({
     threshold: 0.5,
     rootMargin: '100px'
   });
+  
   const [isMounted, setIsMounted] = useState(false);
-    const totalCount = useListingsStore().totalCount;
+    const [totalCount, setTotalCount] = useState<number | null>(initialTotalCount);
     
 
 
@@ -115,6 +34,20 @@ export function useInfiniteScroll<T>({
     setIsMounted(true);
     return () => setIsMounted(false);
   }, []);
+
+  useEffect(() => {
+    const initializeTotalCount = async () => {
+    if (getTotalCount && totalCount === null) {
+      try{
+        const newTotalCount = await getTotalCount();
+        setTotalCount(newTotalCount);
+      } catch (error) {
+        console.error('Error updating total count:', error);
+      }
+     };
+   }
+    initializeTotalCount();
+  }, [getTotalCount, totalCount]);
 
   const getKey: SWRInfiniteKeyLoader = useCallback(
     (pageIndex, previousPageData) => {
@@ -137,19 +70,22 @@ export function useInfiniteScroll<T>({
     revalidateOnFocus: false,
     revalidateOnReconnect: true,
     persistSize: false,
+    refreshInterval: 5000
+    
   });
 
-  // const handleMutation = useCallback(async () => {
-  //   try {
-  //     const newTotalListings = await listings();
-  //     if (newTotalListings) {
-  //       setTotalCount(newTotalListings.length);
-  //     }
-  //     return originalMutate();
-  //   } catch (error) {
-  //     console.error('Error updating after mutation:', error);
-  //   }
-  // }, [originalMutate]);
+  const handleMutation = useCallback(async () => {
+    try {
+     
+      if (getTotalCount) {
+        const newTotalListings = await getTotalCount();
+        setTotalCount(newTotalListings);
+      }
+      return originalMutate()
+    } catch (error) {
+      console.error('Error updating after mutation:', error);
+    }
+  }, [originalMutate, getTotalCount]);
 
   useEffect(() => {
     if (isMounted && inView && !isLoading && totalCount !== null) {
@@ -171,7 +107,8 @@ export function useInfiniteScroll<T>({
     isLoading,
     size,
     setSize,
-    mutate: originalMutate,
-    totalCount
+    mutate: handleMutation,
+    totalCount,
+    inView
   };
 }

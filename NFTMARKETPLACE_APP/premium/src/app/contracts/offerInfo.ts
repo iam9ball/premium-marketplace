@@ -1,5 +1,5 @@
 import { readContract } from 'thirdweb';
-import { marketContract } from './constant';
+import { marketContract } from '../constant';
 
 
 

@@ -2,7 +2,7 @@ import { prepareContractCall, readContract, sendTransaction } from "thirdweb";
 import { getListing } from "./listingInfo";
 import { NATIVE_TOKEN } from "../utils/address";
 import { Account } from "thirdweb/wallets";
-import { marketContract } from "./constant";
+import { marketContract } from "../constant";
 
 export const makeOffer = async (duration: bigint, totalPrice: bigint , listingId: bigint, account: Account) => {
 let fee: bigint | undefined ;

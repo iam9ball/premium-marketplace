@@ -5,8 +5,7 @@
 'use client'
 import { useEffect } from "react";
 import Card from "@/app/components/card/Card";
-import { anvil } from "thirdweb/chains";
-import { client } from "@/app/client";
+
 import { fetchNFT, listings } from "@/app/contracts/listingInfo";
 import { ipfsToHttp } from "@/app/utils/ipfsToHttp";
 import useSWR from 'swr';
@@ -16,7 +15,7 @@ import Error from "@/app/components/Error";
 import {CardContainer} from "@/app/components/card/CardContainer";
 import Container from "@/app/components/Container";
 import CardSkeletonContainer from "@/app/components/card/CardSkeleton";
-import { fetchCurrencyInfo } from "@/app/utils/currency";
+import { fetchCurrencyInfo } from "@/app/hooks/useCurrency";
 import { Contract } from "../utils/Contract";
 
 
@@ -75,9 +74,9 @@ export default function MyOffers() {
     }
   );
 
-  useEffect(() => {
-    createListingModal.setMutateListings(mutate);
-  }, [mutate]);
+  // useEffect(() => {
+  //   createListingModal.setMutateListings(mutate);
+  // }, [mutate]);
 
   if(isLoading) return (
   <CardContainer> 

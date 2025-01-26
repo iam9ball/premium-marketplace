@@ -9,6 +9,8 @@ import { buyListing } from "@/app/contracts/listing";
 import { useActiveAccount } from "thirdweb/react";
 import toast from "react-hot-toast";
 import { showToast } from "../WalletToast";
+import { useSWRConfig } from "swr";
+
 
 
 
@@ -25,23 +27,34 @@ import { showToast } from "../WalletToast";
   });
   const [isDisabled, setIsDisabled] = useState(false); 
    const account = useActiveAccount();
+   const { mutate } = useSWRConfig()
    
-   const onSubmit: SubmitHandler<FieldValues> = (data) => {
+   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
      if (account) {
       setIsDisabled(true);
-    buyListing(data.recipientAddress, buyListingModal.listingId!, account).then((data) => {
+      try{
+        buyListing(data.recipientAddress, buyListingModal.listingId!, account).then(async (data:any) => {
       if(data.success){
         toast.success(data.message!);
         buyListingModal.onClose();
         reset(); 
-        buyListingModal.mutateListings();
+        // mutate("userListings");
       }
       else {
         toast.error(data.message!);
       }
-      setIsDisabled(false);
-     
     })
+      } 
+      catch (error) {
+         toast.error("Unexpected error occured, Try again");
+        console.error(error)
+
+      }
+      finally{
+        buyListingModal.onClose();
+        setIsDisabled(false);
+      }
+   
         
      } else {
        showToast();  

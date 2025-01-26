@@ -59,14 +59,14 @@ const Card = ({ src, alt, name, id, price, currency, listingId, status, variant,
 
   return (
     <div 
-      className="relative h-[300px] w-full cursor-pointer border-1px border-rose-500 bg-rose-500 rounded-lg overflow-hidden 
+      className="relative h-[380px] w-full cursor-pointer border-1px border-rose-500 bg-rose-500 rounded-lg overflow-hidden 
                  shadow-lg transition-all duration-500 ease-in-out group"
       onMouseEnter={handleMouseEnter}
       onClick={onClick}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-rose-400 via-rose-500 to-rose-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500 ease-in-out blur"></div>
       <div className="absolute inset-[2px] bg-gray-900 rounded-lg z-10 overflow-hidden">
-        <div className="relative h-[300px]">
+        <div className="relative h-[380px]">
           <Image
             src={src}
             alt={alt}

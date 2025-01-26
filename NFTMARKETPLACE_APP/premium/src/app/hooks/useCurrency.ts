@@ -1,7 +1,7 @@
 import { useMemo, useCallback, useEffect, useState } from 'react';
 import { readContract, ZERO_ADDRESS } from 'thirdweb';
 import useSWR from 'swr';
-import { marketContract } from '../contracts/constant';
+import { marketContract } from '../constant';
 
 
 import { NATIVE_TOKEN } from '../utils/address';

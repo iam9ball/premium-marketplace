@@ -5,12 +5,12 @@ import { client } from "../client";
 import { IconType } from "react-icons";
 import { createWallet } from "thirdweb/wallets";
 import styles from '../styles/ConnectButton.module.css';
-import { anvil, polygonAmoy } from "thirdweb/chains";
 import { useWindowWidth } from "@react-hook/window-size";
 import { useMemo } from "react";
 import  {generatePayload, isLoggedIn, login} from "../actions/login";
 import { logout } from "../actions/logout";
 import { defineChain} from "thirdweb";
+import { chain } from "../constant";
 
 
 
@@ -85,15 +85,15 @@ export default function Button({
   }, [defaultConnectButton]);
 
 
-  const chain = defineChain({
-  id: 80002,
-  rpc: "https://polygon-amoy.g.alchemy.com/v2/8w2qoqibC8Swp9qjQ5KdZI4jRjf7H8E5",
-  nativeCurrency: {
-    name: "Polygon Amoy",
-    symbol: "POL",
-    decimals: 18,
-  },
-});
+//   const chain = defineChain({
+//   id: 80002,
+//   rpc: "https://polygon-amoy.g.alchemy.com/v2/8w2qoqibC8Swp9qjQ5KdZI4jRjf7H8E5",
+//   nativeCurrency: {
+//     name: "Polygon Amoy",
+//     symbol: "POL",
+//     decimals: 18,
+//   },
+// });
 
   const handleConnect = () => {
     console.log("Connecting...");

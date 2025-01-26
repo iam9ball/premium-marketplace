@@ -2,7 +2,7 @@
 import { useEffect, useCallback, useState, useMemo } from "react";
 import Card from "../components/card/Card";
 import { client } from "../client";
-import { fetchNFT, LimitedListings, listings } from "../contracts/listingInfo";
+import { fetchNFT, listings } from "../contracts/listingInfo";
 import { ipfsToHttp } from "../utils/ipfsToHttp";
 import useCreateListingModal from "../hooks/useCreateListingModal";
 import EmptyState from "../components/EmptyState";
@@ -14,17 +14,35 @@ import { useRouter } from "next/navigation";
 import { toEther } from "thirdweb/utils";
 import { Contract } from "../utils/Contract";
 import { useInfiniteScroll } from "../hooks/useInfiniteScroll";
-import useListingMutateStore from "@/app/hooks/useListingMutateStore";
-// import { LoadingIndicator } from "../components/LoadingIndicator";
+import useInfiniteScrollMutateStore from "@/app/hooks/useInfiniteScrollMutateStore";
+import Container from "../components/Container";
 
 export default function Listings() {
   const createListingModal = useCreateListingModal();
+  const {  setMutateListings } = useInfiniteScrollMutateStore();
   const router = useRouter();
   const PAGE_SIZE = 8;
   const [initialLoading, setInitialLoading] = useState(true);
-  const setMutate = useListingMutateStore(state => state.setMutate);
-  const useListingSetTotalCount = useListingMutateStore();
-  const [listingLength, setListingLength] = useState<number | null>(null);
+   const LimitedListings = async (start = 0, limit: null | number = null) => {
+    try {
+      const allListings = await listings();
+      if (!allListings || allListings.length === 0) {
+        return [];
+      }
+      const reversedListings = [...allListings].reverse();
+      
+      if (limit !== null) {
+        return reversedListings.slice(start, start + limit);
+      }
+      
+      return reversedListings;
+    } catch (error) {
+      console.error('Error fetching listings:', error);
+      throw error;
+    }
+  };
+  
+  
 
   const handleCardClick = (params: bigint) => {
     router.push(`/marketplace/listing/${params}`);
@@ -87,81 +105,40 @@ export default function Listings() {
     }
   }, []);
 
-  // useEffect(async () => {
-  //   try {
-  //     const newTotalListings = await listings();
-  //     if (newTotalListings) {
-  //       useListingSetTotalCount.setTotalCount(newTotalListings.length);
-  //     }
+  const getTotalCount = useCallback(async () => {
+    try {
+      const totalListings = await listings();
+      return totalListings?.length;
       
-  //   } catch (error) {
-  //     console.error('Error updating after mutation:', error);
-  //   } 
-  // }, []);
+    } catch (error) {
+      console.error('Error fetching total count:', error);
+      return null;
+    }
+  }, []);
 
-  // const initialTotalCount = useMemo(async () => {
-  //   const newTotalListings = await listings();
-  //     if (newTotalListings) {
-  //       // useListingSetTotalCount.setTotalCount(newTotalListings.length);
-  //       return newTotalListings.length;
-  //     }
-  // }, [])
-
-  const { ref, pages, isLoading, error, mutate } = useInfiniteScroll({
+  const { ref, pages, isLoading, error, mutate, inView } = useInfiniteScroll({
     fetchData: fetchListings,
     initialTotalCount: null,
     revalidateKey: 'listings',
+    getTotalCount,
   });
-
-  const handleMutation = useCallback(async () => {
-    try {
-       const newTotalListings = await listings();
-
-       
-       if (newTotalListings) {
-         useListingSetTotalCount.setTotalCount(newTotalListings.length);
-       }
-        
-     
-      return await mutate();
-    } catch (error) {
-      console.error('Error in handleMutation:', error);
-    } 
-  }, [mutate, useListingSetTotalCount]);
-
-
-
+  
   useEffect(() => {
-    
-    const initializeListings = async () => {
-      try {
-        const newTotalListings = await listings();
+  setMutateListings(mutate);
+  setInitialLoading(false);
+  },[mutate, setMutateListings])
+ 
 
-          if (newTotalListings) {
-           useListingSetTotalCount.setTotalCount(newTotalListings.length);
-          }
-   
-        
-      } catch (error) {
-        console.error('Error fetching initial listings:', error);
-      } finally {
-       
-          setInitialLoading(false);
-       
-      }
-    };
 
-    initializeListings();
-    setMutate(() => handleMutation);
-
-   
-  }, []);
+  
 
   if (initialLoading || !pages) {
     return (
+      <Container>
       <CardContainer>
         <CardSkeletonContainer />
       </CardContainer>
+      </Container>
     );
   }
 
@@ -182,13 +159,13 @@ export default function Listings() {
   }
 
   return (
-    <>
+    <Container>
       <CardContainer>
         {allItems}
       </CardContainer>
       <div ref={ref} className="h-full mb-auto w-full">
         {isLoading && <CardContainer><CardSkeletonContainer /></CardContainer>}
       </div>
-    </>
+    </Container>
   );
 }

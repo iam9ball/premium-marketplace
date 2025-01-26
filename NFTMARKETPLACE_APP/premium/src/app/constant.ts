@@ -1,14 +1,14 @@
 
 
 import { defineChain, getContract } from "thirdweb";
-// import { anvil, polygonAmoy } from "thirdweb/chains";
-import { client } from "../client";
+import { anvil, polygonAmoy } from "thirdweb/chains";
+import { client } from "./client";
 
 export const contractAddress = "0x1e2a1F8AD39197B3dc97Fa7D58BB181C354B6A57";
 
-const chain = defineChain({
+export const chain = defineChain({
   id: 80002,
-  rpc: "https://polygon-amoy.g.alchemy.com/v2/8w2qoqibC8Swp9qjQ5KdZI4jRjf7H8E5",
+  rpc: "https://80002.rpc.thirdweb.com/2a3b329a72b11d8ffefe89838bcc14b7",
   nativeCurrency: {
     name: "Polygon Amoy",
     symbol: "POL",
@@ -16,8 +16,10 @@ const chain = defineChain({
   },
 });
 
+// Chain ID: 80002
+// export const chain = polygonAmoy;
 
-
+//Marketplace contract
 export const marketContract  = getContract({
         address: contractAddress,
         chain,

@@ -53,31 +53,40 @@ const CreateNftModal = () => {
 
     
 
-     const onSubmit: SubmitHandler<FieldValues> = (data) => {
+     const onSubmit: SubmitHandler<FieldValues> = async(data) => {
       if (step !== STEPS.INFO) {
         return onNext();
       }
       
-      if (account) {
-          setIsLoading(true);
-       createNFT(account, data).then((data) =>  { 
-        if(data.success){
-           nftModal.onClose();
-            toast.success(data.message);
-            reset();
-            setTokenType(undefined);
-            setPreviewUrl("");
-            setOnMarket(true);
-            setStep(STEPS.TOKENTYPE);
-         onMarket && listingModal.onOpen()
+          if (account) {
+              setIsLoading(true);
+              try {
+                await createNFT(account, data).then((data:any) =>  { 
           
-         } else {
-          toast.error(data.message);
-         } 
-        setIsLoading(false);
-       
-      });
-    } else {    
+              if(data.success){
+                      nftModal.onClose();
+                      toast.success(data.message);
+                      reset();
+                      setTokenType(undefined);
+                      setPreviewUrl("");
+                      setOnMarket(true);
+                      setStep(STEPS.TOKENTYPE);
+                      onMarket && listingModal.onOpen()
+                
+              } else {
+                    toast.error(data.message);
+              } 
+          }
+          
+          )}
+          catch (error) {
+            toast.error("Unexpected error occured, Try again");
+            console.error(error)
+          } finally {
+            setIsLoading(false);
+          }
+    } else { 
+         nftModal.onClose();   
          showToast();
          
          // connect wallet

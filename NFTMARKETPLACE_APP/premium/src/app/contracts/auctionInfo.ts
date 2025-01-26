@@ -1,6 +1,6 @@
 import { readContract } from 'thirdweb';
 import { ListingType } from './listing';
-import { marketContract } from './constant';
+import { marketContract } from '../constant';
 
 
 

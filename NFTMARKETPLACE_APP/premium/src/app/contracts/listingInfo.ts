@@ -1,11 +1,11 @@
 import { readContract } from 'thirdweb';
 import { ListingType } from './listing';
-import { marketContract } from './constant';
+import { marketContract } from '../constant';
 
 
 
 
-export const listingInfo = async (params: ListingType) => {
+export const listingTypeInfo = async (params: ListingType) => {
   try {
     const data = await readContract({
       contract: marketContract,
@@ -59,37 +59,19 @@ export const listings = async () => {
   // console.log(data.length)
 
   if (!data) {
-      console.log("No data returned");
+     return []
     }
   return data;
   
   } catch (error) {
     
      console.error(error);
+     throw error;
     
   }
   
     
 }
-
-export const LimitedListings = async (start = 0, limit: null | number = null) => {
-  try {
-    const allListings = await listings();
-    if (!allListings || allListings.length === 0) {
-      return [];
-    }
-    const reversedListings = [...allListings].reverse();
-    
-    if (limit !== null) {
-      return reversedListings.slice(start, start + limit);
-    }
-    
-    return reversedListings;
-  } catch (error) {
-    console.error('Error fetching listings:', error);
-    throw error;
-  }
-};
 
 
 export const getListing = async (listingId: bigint) => {
@@ -104,6 +86,7 @@ export const getListing = async (listingId: bigint) => {
   }
   catch (error) {
     console.error(error);
+    throw error;
     
   }
     
@@ -119,6 +102,7 @@ export const getAllValidListings = async () => {
   }
   catch (error) {
     console.error(error);
+    throw error;
     
   }
     
@@ -135,6 +119,7 @@ export const getPlatformFee = async (currency: string, price: bigint) => {
   }
   catch (error) {
     console.error(error);
+    throw error;
     
   }
     
@@ -151,6 +136,7 @@ export const getListingType = async (params: number) => {
   }
   catch (error) {
     console.error(error);
+    throw error;
     
     
   }
@@ -168,6 +154,7 @@ export const getApprovedBuyer = async (listingId: bigint) => {
   }
   catch (error) {
     console.error(error);
+    throw error;
     
   }
     
@@ -190,6 +177,7 @@ export const fetchNFT = async (contract: any, listing: any) => {
       } 
   } catch (error) {
     console.error(error);
+    throw error;
    
   }
     }

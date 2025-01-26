@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { NATIVE_TOKEN } from "@/app/utils/address";
 import { getListingType } from "@/app/contracts/listingInfo";
 import { TimeHelper } from "@/app/utils/timeFormatter";
-import useListingMutateStore  from "@/app/hooks/useListingMutateStore";
+ import useInfiniteScrollMutateStore  from "@/app/hooks/useInfiniteScrollMutateStore";
 
 
 
@@ -61,13 +61,13 @@ const CreateListingModal = () => {
     const [basicData, setBasicData] = useState<ListingTypeData>({});
   const [advancedData, setAdvancedData] = useState<ListingTypeData>({});
   const [proData, setProData] = useState<ListingTypeData>({});
-  const refreshListings = useListingMutateStore(state => state.refreshListings);
+  const {refreshListings} = useInfiniteScrollMutateStore();
 
     const onBack = () => {
         setStep((value) => value - 1 )
     }
 
-     const onSubmit: SubmitHandler<FieldValues> = (data) => {
+     const onSubmit: SubmitHandler<FieldValues> =  async(data) => {
       if (step !== STEPS.INFO) {
         return onNext();
       }
@@ -89,7 +89,8 @@ const CreateListingModal = () => {
          }
         
         setIsLoading(true);
-       createListing(listingData, account).then((data) => {
+        try{
+         await createListing(listingData, account).then(async (data:any) => {
         if(data.success){
           createListingModal.onClose();
           toast.success(data.message);
@@ -98,17 +99,25 @@ const CreateListingModal = () => {
           setIsReserved(false);
           setSelectedValue(undefined);
           setStep(STEPS.LISTINGPLAN)
-          refreshListings()  // force a soft refetching of listing
-          
-          console.log("refreshed")
+         await refreshListings?.();// force a soft refresh of listing
         }
         else {
           toast.error(data.message);
         } 
-        setIsLoading(false);
+         
        });
         }
-        else {  
+        catch(error: any) {
+          toast.error(error.message);
+            console.error(error);
+        }
+        finally {
+           setIsLoading(false);
+        }
+        }
+       
+        else { 
+          createListingModal.onClose(); 
            showToast();  
         //  connect wallet
         }

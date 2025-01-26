@@ -1,13 +1,11 @@
 import {
-  sendTransaction,
+  sendAndConfirmTransaction, sendTransaction,
   prepareContractCall,
   readContract,
 } from "thirdweb";
-import { anvil, polygonAmoy } from "thirdweb/chains";
-import {contractAddress, marketContract} from "./constant"
-import { client } from "../client";
+import {contractAddress, marketContract} from "../constant"
 import { Account } from "thirdweb/wallets";
-import { listingFee, listingInfo, getListingType, getPlatformFee } from "./listingInfo";
+import { listingFee, listingTypeInfo, getListingType, getPlatformFee } from "./listingInfo";
 import { NATIVE_TOKEN } from "../utils/address";
 import {toWei} from "thirdweb/utils"
 
@@ -32,8 +30,8 @@ export enum ListingType {
   listingPlan: ListingType,
   reserved: boolean
  }, account:Account) => {
-  console.log("yes")
-   const data =  await listingInfo(listingPlan);
+  try {
+   const data =  await listingTypeInfo(listingPlan);
    let fee: bigint | undefined ;
    if (currencyAddress == NATIVE_TOKEN){
    
@@ -77,63 +75,69 @@ export enum ListingType {
        
 
 // Send the transaction
-try {
-   await sendTransaction({ account, transaction: approveTransaction! });
-}
-catch (error) {
-  console.log(error);
-    return {
-      message: "Error approving market: Market must be approved to proceed with transaction"
-    }
-}
-  
-  const priceInWei = toWei(assetPrice.toString());
 
-    
-  const transaction = prepareContractCall({
-  contract: marketContract,
-  method: "createListing",
-  params: [{
-    assetContract: assetAddress,
-    tokenId: assetId,
-    currency: currencyAddress,
-    pricePerToken: priceInWei,
-    listingType: listingPlan,
-    reserved,
-  }],
-  
-  value: fee
+   const transactionReceipt = await sendAndConfirmTransaction({  transaction: approveTransaction!, account });
+   if (transactionReceipt.status === "success") {
+            const priceInWei = toWei(assetPrice.toString());
+
+            
+          const transaction = prepareContractCall({
+          contract: marketContract,
+          method: "createListing",
+          params: [{
+            assetContract: assetAddress,
+            tokenId: assetId,
+            currency: currencyAddress,
+            pricePerToken: priceInWei,
+            listingType: listingPlan,
+            reserved,
+          }],
+          
+          value: fee
 
 
-});
+        });
 
-try {
-    const { transactionHash } = await sendTransaction({
-  account,
-  transaction,
-}); 
-console.log(transactionHash)
+        const transactionReceipt = await sendAndConfirmTransaction({
+          account,
+          transaction,
+        }); 
+        // console.log(transactionHash)
 
-return {
-  success: true,
-  message: "Listing created successfully"
-  }
-} catch (error: any) {
-  console.log(error);
-  let message;
-  if (error?.message.includes('__DirectListing_TransferFailed')) {
-   message = "Error transferring fee: Make sure you are sending a sufficient amount"  
-  }
-  
+        if (transactionReceipt.status === "success") {
+          return {
+          success: true,
+          message: "Listing created successfully"
+          }
+        }
+          else {
+            return {
+              success: false,
+              message: "Listing creation failed"
+            }
+          }
+   }
+
   else {
-    message = "An unexpected error occured: Try again"
+    return {
+      success: false,
+      message: "Error approving market"
+    }
+  }
+}
+catch (error: any) {
+  let message;
+
+  //handle all errors from smartcontract
+  switch (true) {
+    case error?.message.includes('__DirectListing_TransferFailed'):
+      message = "Error transferring fee: Make sure you are sending a sufficient amount";
+      break;
+    default:
+      message = "An unexpected error occured: Try again";
   }
 
-  return {
-    success: false,
-    message: message 
-  }
-
+  throw new Error(message, error);
 }
 
 }
@@ -142,6 +146,7 @@ return {
 
 
 export const buyListing = async (recipientAddress: string , listingId: bigint, account: Account) => {
+  try {
 let fee: bigint | undefined ;
    
 
@@ -169,45 +174,53 @@ let fee: bigint | undefined ;
 
 
 });
-try {
 
-const { transactionHash } = await sendTransaction({
+
+const transactionreceipt = await sendAndConfirmTransaction({
   account,
   transaction,
 }); 
-console.log(transactionHash)
 
-return {
+ if (transactionreceipt.status === "success"){
+  return {
   success: true,
   message: "Listing purchased successfully"
   }
-} catch (error: any) {
-   let message;
-  if (error?.message.includes('__DirectListing_BuyerNotApproved')) {
-   message = "You are not approved to buy this reserved listing"  
-  }
-   
-   if (error?.message.includes('__DirectListing_InvalidRequirementToCompleteASale')){
-    message = "Error purchasing listing: You cannot purchase this listing"
-  }
-  if (error?.message.includes('__DirectListing_InsufficientFunds')){
-    message = "Error purchasing listing: Make sure you are sending enough funds"
-  }
-  else {
-    message = "An unexpected error occured: Try again"
-  }
+
+ }
 
   return {
-    success: false,
-    message: message 
+  success: false,
+  message: "Listing purchase failed"
   }
 
+ 
+
+
+} catch (error: any) {
+  let message;
+
+  switch (true) {
+    case error?.message.includes('__DirectListing_BuyerNotApproved'):
+      message = "You are not approved to buy this reserved listing";
+      break;
+    case error?.message.includes('__DirectListing_InvalidRequirementToCompleteASale'):
+      message = "Error purchasing listing: You cannot purchase this listing";
+      break;
+    case error?.message.includes('__DirectListing_InsufficientFunds'):
+      message = "Error purchasing listing: Make sure you are sending enough funds";
+      break;
+    default:
+      message = "An unexpected error occured: Try again";
+  }
+
+  throw new Error(message, error);
 }
 }
 
 
 export const updateListing = async (listingId: bigint,  currency: string,  pricePerToken: bigint,  account: Account) => {
-
+try {
   const transaction = prepareContractCall({
   contract: marketContract,
   method: "updateListing",
@@ -216,38 +229,41 @@ export const updateListing = async (listingId: bigint,  currency: string,  price
 });
 
 
-try {
 
-const { transactionHash } = await sendTransaction({
+const  transactionreceipt  = await sendAndConfirmTransaction({
   account,
   transaction,
 }); 
-console.log(transactionHash)
 
-return {
+if (transactionreceipt.status === "success"){
+  return {
   success: true,
   message: "Listing updated successfully"
+    }
   }
-} catch (error: any) {
-   let message;
-  if (error?.message.includes('__DirectListing_NotAuthorizedToUpdate')) {
-   message = "You are not authorized to update this listing"  
-  }
-   
-   if (error?.message.includes('__DirectListing_InvalidId')){
-    message = "Error: Invalid listing"
-  }
-  if (error?.message.includes('__DirectListing_InvalidListingCurrency')){
-    message = "Error: Invalid currency"
-  }
-  else {
-    message = "An unexpected error occured: Try again"
+  return {
+  success: false,
+  message: "Listing update failed"
   }
 
-  return {
-    success: false,
-    message: message 
+ } catch (error: any) {
+   let message;
+
+  switch (true) {
+    case error?.message.includes('__DirectListing_NotAuthorizedToUpdate'):
+      message = "You are not authorized to update this listing";
+      break;
+    case error?.message.includes('__DirectListing_InvalidId'):
+      message = "Error: Invalid listing";
+      break;
+    case error?.message.includes('__DirectListing_InvalidListingCurrency'):
+      message = "Error: Invalid currency";
+      break;
+    default:
+      message = "An unexpected error occured: Try again";
   }
+
+  throw new Error(message, error);
 
 }
 
@@ -257,10 +273,7 @@ return {
 
 
 export const updateListingPlan = async (listingId: bigint,  listingPlan:ListingType,  account: Account) => {
-
-  
-   
-
+try {
     const listing = await readContract({
      contract: marketContract,
      method:"getListing",
@@ -300,37 +313,39 @@ export const updateListingPlan = async (listingId: bigint,  listingPlan:ListingT
 });
 
 
-try {
 
-const { transactionHash } = await sendTransaction({
+
+const transactionreceipt  = await sendAndConfirmTransaction({
   account,
   transaction,
 }); 
-console.log(transactionHash)
 
-return {
+if (transactionreceipt.status === "success"){
+  return {
   success: true,
   message: "Listing Plan updated"
   }
+}
+return {
+  success: false,
+  message: "Listing Plan update failed"
+  }
+
 } catch (error: any) {
    let message;
-  if (error?.message.includes('__DirectListing_NotAuthorizedToUpdate')) {
-   message = "You are not authorized to update this listing"  
-  }
-   
-   if (error?.message.includes('__DirectListing_TransferFailed')){
-    message = "Error: Transfer failed"
+
+  switch (true) {
+    case error?.message.includes('__DirectListing_NotAuthorizedToUpdate'):
+      message = "You are not authorized to update this listing";
+      break;
+    case error?.message.includes('__DirectListing_TransferFailed'):
+      message = "Error: Transfer failed";
+      break;
+    default:
+      message = "An unexpected error occured: Try again";
   }
 
-  else {
-    message = "An unexpected error occured: Try again"
-  }
-  
-
-  return {
-    success: false,
-    message: message 
-  }
+   throw new Error(message, error);
 
 }
 
@@ -339,7 +354,7 @@ return {
 
 
 export const cancelListing = async (listingId: bigint, account: Account) => {
-
+try {
   const transaction = prepareContractCall({
   contract: marketContract,
   method: "cancelListing",
@@ -348,34 +363,35 @@ export const cancelListing = async (listingId: bigint, account: Account) => {
 });
 
 
-try {
 
-const { transactionHash } = await sendTransaction({
+
+const transactionreceipt = await sendAndConfirmTransaction({
   account,
   transaction,
 }); 
-console.log(transactionHash)
 
-return {
+if (transactionreceipt.status === "success"){
+  return {
   success: true,
   message: "Listing cancelled"
   }
+}
+return {
+  success: false,
+  message: "Listing cancel failed"
+  }
 } catch (error: any) {
    let message;
-  if (error?.message.includes('__DirectListing_NotAuthorizedToCancel')) {
-   message = "You are not authorized to cancel this listing"  
-  }
-   
 
-  else {
-    message = "An unexpected error occured: Try again"
+  switch (true) {
+    case error?.message.includes('__DirectListing_NotAuthorizedToCancel'):
+      message = "You are not authorized to cancel this listing";
+      break;
+    default:
+      message = "An unexpected error occured: Try again";
   }
-  
 
-  return {
-    success: false,
-    message: message 
-  }
+  throw new Error(message, error);
 
 }
 
@@ -384,7 +400,7 @@ return {
 
 
 export const approveBuyerForListing = async (listingId: bigint, buyer: string, account: Account) => {
-
+try {
   const transaction = prepareContractCall({
   contract: marketContract,
   method: "approveBuyerForListing",
@@ -393,42 +409,41 @@ export const approveBuyerForListing = async (listingId: bigint, buyer: string, a
 });
 
 
-try {
 
-const { transactionHash } = await sendTransaction({
+
+const  transactionreceipt  = await sendAndConfirmTransaction({
   account,
   transaction,
 }); 
-console.log(transactionHash)
 
-return {
+if (transactionreceipt.status === "success"){
+  return {
   success: true,
   message: "Buyer approved for listing"
   }
+}
+return {
+  success: false,
+  message: "Buyer approval failed"
+  }
 } catch (error: any) {
    let message;
-  if (error?.message.includes('__DirectListing_NotAuthorizedToApproveBuyerForListing')) {
-   message = "You are not authorized to approve a buyer"  
-  }
-   
-  if (error?.message.includes('__DirectListing_InvalidAddress')) {
-   message = "Error: Invalid address"  
-  }
-  if (error?.message.includes('__DirectListing_CanOnlyApproveABuyer')) {
-   message = "Error: You can only approve a buyer "  
-  }
-   
 
-  else {
-    message = "An unexpected error occured: Try again"
-  }
-  
-
-  return {
-    success: false,
-    message: message 
+  switch (true) {
+    case error?.message.includes('__DirectListing_NotAuthorizedToApproveBuyerForListing'):
+      message = "You are not authorized to approve a buyer";
+      break;
+    case error?.message.includes('__DirectListing_InvalidAddress'):
+      message = "Error: Invalid address";
+      break;
+    case error?.message.includes('__DirectListing_CanOnlyApproveABuyer'):
+      message = "Error: You can only approve a buyer";
+      break;
+    default:
+      message = "An unexpected error occured: Try again";
   }
 
+  throw new Error(message, error);
 }
 
 }
@@ -436,7 +451,7 @@ return {
 
 
 export const removeApprovedBuyerForListing = async (listingId: bigint, account: Account) => {
-
+try {
   const transaction = prepareContractCall({
   contract: marketContract,
   method: "removeApprovedBuyerForListing",
@@ -445,39 +460,39 @@ export const removeApprovedBuyerForListing = async (listingId: bigint, account: 
 });
 
 
-try {
 
-const { transactionHash } = await sendTransaction({
+
+const transactionreceipt  = await sendAndConfirmTransaction({
   account,
   transaction,
 }); 
-console.log(transactionHash)
 
-return {
+if (transactionreceipt.status === "success"){
+  return {
   success: true,
   message: "Buyer unapproved for listing"
   }
+}
+
+return {
+  success: false,
+  message: "Buyer unapproval failed"
+  }
 } catch (error: any) {
    let message;
-  if (error?.message.includes('__DirectListing_NotAuthorizedToRemoveBuyerForListing')) {
-   message = "You are not authorized to unapprove a buyer"  
-  }
-   
-  
-  if (error?.message.includes('__DirectListing_CanOnlyRemoveApprovedBuyer')) {
-   message = "Error: You can only remove an approved buyer "  
-  }
-   
 
-  else {
-    message = "An unexpected error occured: Try again"
+  switch (true) {
+    case error?.message.includes('__DirectListing_NotAuthorizedToRemoveBuyerForListing'):
+      message = "You are not authorized to unapprove a buyer";
+      break;
+    case error?.message.includes('__DirectListing_CanOnlyRemoveApprovedBuyer'):
+      message = "Error: You can only remove an approved buyer";
+      break;
+    default:
+      message = "An unexpected error occured: Try again";
   }
-  
 
-  return {
-    success: false,
-    message: message 
-  }
+ throw new Error(message, error);
 
 }
 

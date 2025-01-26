@@ -7,8 +7,7 @@ import Image from 'next/image';
 import useDialog from '@/app/hooks/useDialog';
 import useBuyListingModal from '@/app/hooks/useBuyListingModal';
 import { fetchNFT, getListing } from '@/app/contracts/listingInfo';
-import { anvil,  polygonAmoy } from "thirdweb/chains";
-import { client } from "@/app/client";
+
 import useSWR from 'swr';
 import useMakeOfferModal from '@/app/hooks/useMakeOfferModal';
 import Error from '@/app/components/Error';
@@ -68,15 +67,13 @@ export default function ListingDetails({ listingId }: ListingDetailsProps) {
     }
   }, [listingId]);
 
-  const { data, error, mutate, isLoading } = useSWR('listings/' + listingId, fetchListing, {
+  const { data, error,  isLoading } = useSWR('listings', fetchListing, {
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
+    refreshInterval: 5000
   });
 
-  useEffect(() => {
-    buyListingModal.setMutateListings(mutate);
-  }, [mutate]);
-
+ 
   const listingStatus = useMemo(() => {
     switch (data?.status) {
       case 0: return "Inactive";

@@ -13,7 +13,7 @@ import Error from "@/app/components/Error";
 import {CardContainer} from "@/app/components/card/CardContainer";
 import Container from "@/app/components/Container";
 import CardSkeletonContainer from "@/app/components/card/CardSkeleton";
-import { fetchCurrencyInfo } from "@/app/utils/currency";
+import { fetchCurrencyInfo } from "@/app/hooks/useCurrency";
 import MyListingsSidebar from "./MyListingsSidebar";
 import image4 from "@public/image4.jpeg"
 import Image from "next/image";
@@ -108,9 +108,9 @@ export default function MyListings() {
     }
   );
 
-  useEffect(() => {
-    createListingModal.setMutateListings(mutate);
-  }, [mutate]);
+  // useEffect(() => {
+  //   createListingModal.setMutateListings(mutate);
+  // }, [mutate]);
 
   if(isLoading) return (
   <CardContainer> 
