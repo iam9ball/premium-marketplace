@@ -87,7 +87,7 @@ export default function Listings() {
           );
         } catch (error) {
           console.error('Error fetching listing:', listing.listingId, error);
-          return null;
+          
         }
       }));
 
@@ -101,7 +101,7 @@ export default function Listings() {
       };
     } catch (error) {
       console.error('Error fetching listings:', error);
-      return { items: [], totalCount: 0 };
+      throw error
     }
   }, []);
 
@@ -116,7 +116,7 @@ export default function Listings() {
     }
   }, []);
 
-  const { ref, pages, isLoading, error, mutate, inView } = useInfiniteScroll({
+  const { ref, pages, isLoading, error, mutate } = useInfiniteScroll({
     fetchData: fetchListings,
     initialTotalCount: null,
     revalidateKey: 'listings',
@@ -144,9 +144,9 @@ export default function Listings() {
 
   if (error) return <Error error={error} />;
 
-  const allItems = pages?.flatMap(page => page.items) || [];
+  const allItems = pages?.flatMap(page => page?.items) || [];
 
-  if (!initialLoading && allItems.length === 0) {
+  if (!initialLoading && allItems.length === 0 && !error) {
     return (
       <EmptyState
         title="Oops!"
@@ -163,7 +163,7 @@ export default function Listings() {
       <CardContainer>
         {allItems}
       </CardContainer>
-      <div ref={ref} className="h-full mb-auto w-full">
+      <div ref={ref} className="h-full mb-auto mt-5 w-full">
         {isLoading && <CardContainer><CardSkeletonContainer /></CardContainer>}
       </div>
     </Container>

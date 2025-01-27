@@ -7,8 +7,9 @@ import { marketContract } from '../constant';
 import { NATIVE_TOKEN } from '../utils/address';
 
 export const fetchCurrencyInfo = async (contractAddress: string) => {
+  try {
   let response;
-    if (contractAddress ==  NATIVE_TOKEN) {
+    if (contractAddress.toLowerCase() ==  NATIVE_TOKEN.toLowerCase()) {
      const address = "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0"  //use wrapped matic
           response = await fetch(`https://api.coingecko.com/api/v3/coins/ethereum/contract/${address}`); 
         
@@ -26,6 +27,11 @@ export const fetchCurrencyInfo = async (contractAddress: string) => {
           console.log('Fetched token info:', data); // Logging fetched data
           return data;
         }
+       catch (error) {
+        console.error("Failed to fetch currency info");
+        throw error
+      }
+    }
 
 
 export const useCurrency = () => {
@@ -42,6 +48,7 @@ export const useCurrency = () => {
 
       } catch (error) {
         console.error("Failed to fetch currency addresses:", error);
+        throw error
       }
     }, []);
 

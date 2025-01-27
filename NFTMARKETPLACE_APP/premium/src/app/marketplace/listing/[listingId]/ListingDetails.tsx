@@ -67,7 +67,7 @@ export default function ListingDetails({ listingId }: ListingDetailsProps) {
     }
   }, [listingId]);
 
-  const { data, error,  isLoading } = useSWR('listings', fetchListing, {
+  const { data, error,  isLoading } = useSWR('listing/' + listingId, fetchListing, {
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
     refreshInterval: 5000

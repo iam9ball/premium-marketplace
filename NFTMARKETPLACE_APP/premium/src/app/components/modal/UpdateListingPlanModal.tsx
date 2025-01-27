@@ -1,6 +1,6 @@
+"use client";
 
-
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import  Heading  from '@/app/components/Heading';
 import { TimeHelper } from '@/app/utils/timeFormatter';
 import { ListingType, updateListingPlan} from '@/app/contracts/listing';
@@ -8,7 +8,8 @@ import { useActiveAccount } from 'thirdweb/react';
 import Modal from './Modal';
 import toast from 'react-hot-toast';
 import { showToast } from '@/app/components/WalletToast';
-import { FieldValues, SubmitHandler,  } from 'react-hook-form';
+import { FieldValues, SubmitHandler, useForm,  } from 'react-hook-form';
+import { getListingType } from '@/app/contracts/listingInfo';
 
 
 
@@ -23,31 +24,50 @@ interface UpdateListingPlanModalProps {
   isOpen: boolean
 }
 
+ enum LISTINGPLAN {
+   BASIC,
+   ADVANCED,
+   PRO,
+ }
+
 const UpdateListingPlanModal = ({listingId, onClose, isOpen}:UpdateListingPlanModalProps) => {
   const account = useActiveAccount();
   const [listingPlan, setListingPlan] = useState<ListingType>(ListingType.BASIC);
   const [basicData, setBasicData] = useState<ListingTypeData>();
   const [advancedData, setAdvancedData] = useState<ListingTypeData>();
   const [proData, setProData] = useState<ListingTypeData>();
-  const [isLoading, setIsLoading] = useState(false);
   const [isDisabled, setIsDisabled] = useState(false);
+  const {
+      handleSubmit,
+      formState: { errors },
+    } = useForm<FieldValues>();
 
   const handleListingPlan = (plan: ListingType) => {
     setListingPlan(plan);
   }
 
-  // const handleUpdateListingPlan = () => {
-  //   setIsDisabled(true);
-  //   updateListingPlan(listingId, listingPlan, account!).then((data) => {
-  //     if(data.success){
-  //       toast.success(data.message!);
-  //       onClose();
-  //     } else {
-  //       showToast();
-  //     }
-  //   })
-  // }
+ 
 
+     useEffect(() => {
+      const fetchListingPlanData = async () => {
+          try {
+              const [basicResult, advancedResult, proResult] = await Promise.all([
+                  getListingType(LISTINGPLAN.BASIC),
+                  getListingType(LISTINGPLAN.ADVANCED),
+                  getListingType(LISTINGPLAN.PRO)
+              ]);
+
+              // Set the state with the fetched data
+              setBasicData({ duration:  TimeHelper.secondsToMonths(Number(basicResult?.[0]!)), price: basicResult?.[1].toString() });
+              setAdvancedData({ duration: TimeHelper.secondsToMonths(Number(advancedResult?.[0]!)), price: advancedResult?.[1].toString() });
+              setProData({ duration: TimeHelper.secondsToMonths(Number(proResult?.[0]!)), price: proResult?.[1].toString() });
+          } catch (error) {
+              console.error('Error fetching listing data:', error);
+          }
+      };
+  
+      fetchListingPlanData();
+  }, []);
 
    const onSubmit: SubmitHandler<FieldValues> = (data) => {
      if (account) {
@@ -111,7 +131,7 @@ const UpdateListingPlanModal = ({listingId, onClose, isOpen}:UpdateListingPlanMo
         isOpen={isOpen}
         onClose={onClose}
         forwardLabel='Update'
-        forward={onSubmit}
+        forward={handleSubmit(onSubmit)}
         body={bodyContent}
         backward={() => {}}
         backwardLabel=''

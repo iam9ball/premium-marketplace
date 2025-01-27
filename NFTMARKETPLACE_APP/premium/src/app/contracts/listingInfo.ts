@@ -20,7 +20,8 @@ export const listingTypeInfo = async (params: ListingType) => {
 
     return data;
   } catch (error) {
-    console.error(error);
+   
+    throw error
     // Handle the error appropriately
    
   }
@@ -37,7 +38,7 @@ export const listingFee = async (currency: string, price:bigint) => {
    return data;
   } 
   catch (error) {
-   console.error(error);
+   throw error;
     // Handle the error appropriately
    
  }
@@ -65,7 +66,7 @@ export const listings = async () => {
   
   } catch (error) {
     
-     console.error(error);
+     
      throw error;
     
   }
@@ -85,7 +86,7 @@ export const getListing = async (listingId: bigint) => {
    return data;  
   }
   catch (error) {
-    console.error(error);
+   
     throw error;
     
   }
@@ -101,7 +102,7 @@ export const getAllValidListings = async () => {
    return data;  
   }
   catch (error) {
-    console.error(error);
+    
     throw error;
     
   }
@@ -118,7 +119,7 @@ export const getPlatformFee = async (currency: string, price: bigint) => {
    return data;  
   }
   catch (error) {
-    console.error(error);
+   
     throw error;
     
   }
@@ -135,7 +136,7 @@ export const getListingType = async (params: number) => {
    return data;  
   }
   catch (error) {
-    console.error(error);
+    
     throw error;
     
     
@@ -153,7 +154,7 @@ export const getApprovedBuyer = async (listingId: bigint) => {
    return data;  
   }
   catch (error) {
-    console.error(error);
+   
     throw error;
     
   }
@@ -176,7 +177,7 @@ export const fetchNFT = async (contract: any, listing: any) => {
         return nft;
       } 
   } catch (error) {
-    console.error(error);
+   
     throw error;
    
   }

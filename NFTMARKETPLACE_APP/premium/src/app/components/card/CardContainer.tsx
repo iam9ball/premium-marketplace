@@ -15,6 +15,7 @@ export const CardContainer = ({ children, className = "" }: CardContainerProps) 
         gap-x-4
         md:gap-x-3
         gap-y-6
+        
         ${className}
       `}>
         {children}

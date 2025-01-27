@@ -5,7 +5,7 @@ import {
 } from "thirdweb";
 import {contractAddress, marketContract} from "../constant"
 import { Account } from "thirdweb/wallets";
-import { listingFee, listingTypeInfo, getListingType, getPlatformFee } from "./listingInfo";
+import { listingFee, listingTypeInfo } from "./listingInfo";
 import { NATIVE_TOKEN } from "../utils/address";
 import {toWei} from "thirdweb/utils"
 
@@ -113,7 +113,7 @@ export enum ListingType {
           else {
             return {
               success: false,
-              message: "Listing creation failed"
+              message: "Error creating listing"
             }
           }
    }
@@ -191,7 +191,7 @@ const transactionreceipt = await sendAndConfirmTransaction({
 
   return {
   success: false,
-  message: "Listing purchase failed"
+  message: "Error purchasing listing"
   }
 
  
@@ -243,7 +243,7 @@ if (transactionreceipt.status === "success"){
   }
   return {
   success: false,
-  message: "Listing update failed"
+  message: "Error updating listing"
   }
 
  } catch (error: any) {
@@ -328,7 +328,7 @@ if (transactionreceipt.status === "success"){
 }
 return {
   success: false,
-  message: "Listing Plan update failed"
+  message: "Error updating listing plan"
   }
 
 } catch (error: any) {
@@ -378,7 +378,7 @@ if (transactionreceipt.status === "success"){
 }
 return {
   success: false,
-  message: "Listing cancel failed"
+  message: "Error cancelling listing"
   }
 } catch (error: any) {
    let message;
@@ -424,7 +424,7 @@ if (transactionreceipt.status === "success"){
 }
 return {
   success: false,
-  message: "Buyer approval failed"
+  message: "Error approving buyer"
   }
 } catch (error: any) {
    let message;
@@ -470,13 +470,13 @@ const transactionreceipt  = await sendAndConfirmTransaction({
 if (transactionreceipt.status === "success"){
   return {
   success: true,
-  message: "Buyer unapproved for listing"
+  message: "Buyer removed for listing"
   }
 }
 
 return {
   success: false,
-  message: "Buyer unapproval failed"
+  message: "Error removing buyer"
   }
 } catch (error: any) {
    let message;

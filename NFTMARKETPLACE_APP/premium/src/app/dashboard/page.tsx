@@ -9,7 +9,7 @@ export default  function Marketplace() {
    
     <>
    
-     <section>
+      <section className="bg-gray-700">
       <Dashboard/>
      </section> 
      

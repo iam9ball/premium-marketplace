@@ -10,6 +10,8 @@ import { useActiveAccount } from "thirdweb/react";
 import toast from "react-hot-toast";
 import { showToast } from "../WalletToast";
 import { useSWRConfig } from "swr";
+import { usePathname } from "next/navigation";
+import useInfiniteScrollMutateStore from "@/app/hooks/useInfiniteScrollMutateStore";
 
 
 
@@ -27,36 +29,46 @@ import { useSWRConfig } from "swr";
   });
   const [isDisabled, setIsDisabled] = useState(false); 
    const account = useActiveAccount();
-   const { mutate } = useSWRConfig()
+   const { mutate } = useSWRConfig();
+    const pathName = usePathname();
+    const { mutate:mutateListing } = useInfiniteScrollMutateStore();
    
    const onSubmit: SubmitHandler<FieldValues> = async (data) => {
      if (account) {
       setIsDisabled(true);
       try{
-        buyListing(data.recipientAddress, buyListingModal.listingId!, account).then(async (data:any) => {
+       await buyListing(data.recipientAddress, buyListingModal.listingId!, account).then(async (data:any) => {
       if(data.success){
         toast.success(data.message!);
         buyListingModal.onClose();
         reset(); 
-        // mutate("userListings");
+        
+       switch(true){
+        case pathName == `listing/${buyListingModal.listingId}`: 
+        await mutate(`listing/${buyListingModal.listingId}`);
+        break;
+        default: 
+       await  mutateListing?.();
+        break;
+       }
       }
       else {
-        toast.error(data.message!);
+        toast.error(data.message);
       }
     })
       } 
-      catch (error) {
-         toast.error("Unexpected error occured, Try again");
+      catch (error: any) {
+         toast.error(error.message);
         console.error(error)
 
       }
       finally{
-        buyListingModal.onClose();
         setIsDisabled(false);
       }
    
         
      } else {
+       buyListingModal.onClose();
        showToast();  
      }
   }  

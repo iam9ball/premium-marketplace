@@ -45,7 +45,7 @@ export default function CurrencySelect({
         isLoading={isLoading}
         options={formattedCurrency}
         value={value}
-        onChange={onChange}
+        onChange={(selectedOption) => onChange(selectedOption as CurrencySelectValue | null)}
         formatOptionLabel={(option) => (
           <div className="flex flex-row items-center gap-3">
             <Image src={option.image.thumb} alt={option.symbol} width={24} height={24} />

@@ -8,7 +8,7 @@ import { useInView } from 'react-intersection-observer';
 
 
 interface InfiniteScrollOptions<T> {
-  fetchData: (key: string) => Promise<{ items: T[]; totalCount: number }>;
+  fetchData: (key: string) => Promise<{ items: T[]; totalCount: number }> ;
   initialTotalCount: number | null;
   revalidateKey: string;
   getTotalCount?: () => Promise<number | null>;
@@ -70,7 +70,7 @@ export function useInfiniteScroll<T>({
     revalidateOnFocus: false,
     revalidateOnReconnect: true,
     persistSize: false,
-    refreshInterval: 5000
+    refreshInterval: 5000,
     
   });
 
@@ -109,6 +109,6 @@ export function useInfiniteScroll<T>({
     setSize,
     mutate: handleMutation,
     totalCount,
-    inView
+    
   };
 }
