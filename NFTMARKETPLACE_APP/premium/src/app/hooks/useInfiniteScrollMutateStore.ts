@@ -1,26 +1,39 @@
 import {create} from "zustand";
 
 type MutateFn = (() => void) | (() => Promise<void>) | null;
+type Mutate =  "marketplaceMutate" | "dashboardMutate";
 
 interface InfiniteScrollMutateStore {
- mutate: MutateFn;
- refreshListings: MutateFn;
-  setMutateListings: (mutateFn: MutateFn) => void | null; 
+ dashboardMutate: MutateFn;
+ marketplaceMutate: MutateFn;
+ marketplaceRefreshListings: MutateFn;
+ dashboardRefreshListings: MutateFn;
+  setMutateListings: (mutate: Mutate, mutateFn: MutateFn) => void | null; 
   }
 
   const useInfiniteScrollMutateStore = create<InfiniteScrollMutateStore>((set) => ({
-    mutate: null,
-    refreshListings: async() => {
+    dashboardMutate: null,
+    marketplaceMutate: null,
+    marketplaceRefreshListings: async() => {
     set((state) => {
-      state.mutate?.();
+      state.marketplaceMutate?.();
+      return state;
+    });
+  },
+    dashboardRefreshListings: async() => {
+    set((state) => {
+      state.dashboardMutate?.();
       return state;
     });
   },
 
-  setMutateListings: (mutateFn: MutateFn) => {
+  setMutateListings: (mutate: string, mutateFn: MutateFn) => {
     set((state) => {
-      if (state.mutate !== mutateFn) {
-        return { mutate: mutateFn };
+      if (mutate === "marketplaceMutate" && state.marketplaceMutate !== mutateFn) {
+        return { marketplaceMutate: mutateFn };
+      }
+      else if (mutate === "dashboardMutate" && state.dashboardMutate !== mutateFn) {
+        return { dashboardMutate: mutateFn };
       }
       return state;
     });

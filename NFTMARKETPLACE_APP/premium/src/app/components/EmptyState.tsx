@@ -20,7 +20,7 @@ export default function EmptyState({
   showButton,
 }: EmptyStateProps) {
   return (
-    <div className="h-[100vh] w-full flex flex-col gap-2 justify-center items-center">
+    <div className="h-[100vh] bg-gray-700 w-full flex flex-col gap-2 justify-center items-center">
         <Heading
         title={title}
         subtitle={subtitle}

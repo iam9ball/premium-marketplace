@@ -16,7 +16,7 @@ import Error from "@/app/components/Error";
 import {CardContainer} from "@/app/components/card/CardContainer";
 import Container from "@/app/components/Container";
 import CardSkeletonContainer from "@/app/components/card/CardSkeleton";
-import { fetchCurrencyInfo } from "@/app/utils/currency";
+import { fetchCurrencyInfo } from "@/app/hooks/useCurrency";
 import { Contract } from "../utils/Contract";
 
 
@@ -75,9 +75,7 @@ export default function MyAuctions() {
     }
   );
 
-  useEffect(() => {
-    createListingModal.setMutateListings(mutate);
-  }, [mutate]);
+  
 
   if(isLoading) return (
   <CardContainer> 

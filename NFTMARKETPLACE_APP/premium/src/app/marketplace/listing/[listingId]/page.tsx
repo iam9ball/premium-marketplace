@@ -18,9 +18,9 @@ export default async function ListingPage({ params }: { params: IParams }) {
      
     <>
      <section className="min-h-[100vh]">
-      <Container>
+      
        <ListingDetails listingId={params.listingId}/>
-       </Container>
+      
      </section> 
      
     </>

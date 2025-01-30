@@ -7,7 +7,7 @@ import { anvil } from "thirdweb/chains";
 import {contractAddress, marketContract} from "../constant"
 import { client } from "../client";
 import { Account } from "thirdweb/wallets";
-import { listingFee, listingInfo, getListingType, getPlatformFee } from "./listingInfo";
+import { listingFee, getListingType, getPlatformFee } from "./listingInfo";
 import { NATIVE_TOKEN } from "../utils/address";
 
 import { approve, isERC721 } from "thirdweb/extensions/erc721";

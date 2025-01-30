@@ -87,6 +87,7 @@ export default function Listings() {
           );
         } catch (error) {
           console.error('Error fetching listing:', listing.listingId, error);
+          throw error;
           
         }
       }));
@@ -112,27 +113,28 @@ export default function Listings() {
       
     } catch (error) {
       console.error('Error fetching total count:', error);
-      return null;
+      throw error;
     }
   }, []);
 
   const { ref, pages, isLoading, error, mutate } = useInfiniteScroll({
     fetchData: fetchListings,
-    initialTotalCount: null,
+    initialTotalCount: undefined,
     revalidateKey: 'listings',
     getTotalCount,
   });
   
   useEffect(() => {
-  setMutateListings(mutate);
+  setMutateListings("marketplaceMutate", mutate);
   setInitialLoading(false);
-  },[mutate, setMutateListings])
+  },[mutate])
  
-
-
+ 
+  console.log("error", error);
+ if (error) return <Error error={error} />;
   
 
-  if (initialLoading || !pages) {
+  if (initialLoading || !pages  && !error) {
     return (
       <Container>
       <CardContainer>
@@ -142,7 +144,7 @@ export default function Listings() {
     );
   }
 
-  if (error) return <Error error={error} />;
+  
 
   const allItems = pages?.flatMap(page => page?.items) || [];
 

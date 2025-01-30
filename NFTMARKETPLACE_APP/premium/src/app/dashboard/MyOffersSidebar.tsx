@@ -1,115 +1,74 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { X, Edit, Trash, DollarSign, UserCheck, UserMinus } from "lucide-react";
 import { ListingItem } from "./MyListings";
 import Image from "next/image";
-import {
-  cancelListing,
-  removeApprovedBuyerForListing
-} from "../contracts/listing";
+
 import { useActiveAccount } from "thirdweb/react";
 import toast from "react-hot-toast";
 import { showToast } from "@/app/components/WalletToast";
-import UpdateListingModal from "../components/modal/UpdateListingModal";
-import UpdateListingPlanModal from "../components/modal/UpdateListingPlanModal";
-import ApproveBuyerModal from "../components/modal/ApproveBuyerModal";
-import { shortenAddress } from "thirdweb/utils";
-import { ZERO_ADDRESS } from "thirdweb";
+import { shortenAddress, toEther } from "thirdweb/utils";
 import useInfiniteScrollMutateStore from "@/app/hooks/useInfiniteScrollMutateStore";
 import { getApprovedBuyer } from "../contracts/listingInfo";
+import { Offers } from "./MyOffers";
+import useMakeOfferModal from "../hooks/useMakeOfferModal";
+import { cancelOffer } from "../contracts/offer";
 
-interface MyListingsSidebarProps {
-  listing: ListingItem ;
+interface MyOffersSidebarProps {
+  listing: Offers;
   onClose: () => void;
   isVisible: boolean;
 }
 
-export default function MyListingsSidebar({
+export default function MyOffersSidebar({
   listing,
   onClose,
   isVisible,
-}: MyListingsSidebarProps) {
+}: MyOffersSidebarProps) {
   const account = useActiveAccount();
-  const [openUpdateListingModal, setOpenUpdateListingModal] =
-    useState<boolean>(false);
-  const [openUpdateListingPlanModal, setOpenUpdateListingPlanModal] =
-    useState<boolean>(false);
+  
   const [isDisabled, setIsDisabled] = useState(false);
-  const [openApproveBuyerForListing, setOpenApproveBuyerForListing] =
-    useState(false);
+ 
   const { dashboardRefreshListings } = useInfiniteScrollMutateStore();
-  const [buyer, setBuyer] = useState<string>(ZERO_ADDRESS);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const offer = useMakeOfferModal();
+  
+  const makeOffer = useCallback(() => {
+    offer.onOpen();
+    offer.setListingId(listing.listingId);
+  }, [offer, listing]);
 
 
   const handleClose = () => {
     setTimeout(onClose, 300);
   };
 
-  // Update Listing Modal
-  const handleOpenUpdateListingModal = () => {
-    setOpenUpdateListingModal(true);
-  };
-
-  const handleCloseUpdateListingModal = () => {
-    setOpenUpdateListingModal(false);
-  };
-
-  // Approve Buyer For Listing Modal
-  const handleOpenApproveBuyerForListing = () => {
-    setOpenApproveBuyerForListing(true);
-  };
-  const handleCloseApproveBuyerForListing = () => {
-    setOpenApproveBuyerForListing(false);
-  };
-
-  // Update Listing Plan Modal
-  const handleOpenUpdateListingPlan = () => {
-    setOpenUpdateListingPlanModal(true);
-  };
-  const handleCloseUpdateListingPlan = () => {
-    setOpenUpdateListingPlanModal(false);
-  };
-
-
-  const handleRemoveApprovedBuyerForListing = async () => {
-    if (account) {
-      try {
-        setIsDisabled(true); //  setIsDisabled(true);
-        await removeApprovedBuyerForListing(listing?.listingId, account).then(
-          async (data) => {
-            if (data.success) {
-              toast.success(data.message);
-             await dashboardRefreshListings?.();
-             handleClose();
-            } else {
-              toast.error(data.message);
-            }
-          }
-        );
-      } catch (error: any) {
-        toast.error(error.message);
-        console.error(error);
-      } finally {
-        setIsDisabled(false);
-      }
-    } else {
-      showToast();
+  const offerStatus = useMemo(() => {
+    switch (listing.offerStatus) {
+      case 1:
+        return "Your Offer is awaiting a response";
+      case 2:
+        return "Your Offer has been accepted";
+      case 3:
+        return "Your Offer has been rejected";
+      default:
+        return "Your Offer is currently inactive";
     }
-  };
+  }, [listing.offerStatus]);
+
+
+
+  
 
   const handleCancel = async () => {
     if (account) {
       try {
         setIsDisabled(true);
-        await cancelListing(listing?.listingId, account).then(async (data) => {
+        await cancelOffer(listing?.offerId, listing.listingId, account).then(async (data) => {
           if (data.success) {
             toast.success(data.message);
-           await dashboardRefreshListings?.();
-           handleClose();
-
+            await dashboardRefreshListings?.();
+            handleClose();
           } else {
             toast.error(data.message);
           }
@@ -128,28 +87,6 @@ export default function MyListingsSidebar({
 
   
 
-  useEffect(() => {
-    const getBuyer = async (listing: ListingItem) => {
-      try {
-
-        // if (!listing?.listingId) {
-        //   setBuyer(ZERO_ADDRESS);
-        //   return;
-        // }
-        const buyer = await getApprovedBuyer(listing.listingId);
-        setIsLoading(false);
-        setBuyer(buyer || ZERO_ADDRESS); // Ensure we never set undefined
-      } catch (error) {
-        console.error("Error fetching approved buyer:", error);
-        setError("Error fetching approved buyer");
-        // setBuyer(ZERO_ADDRESS); // Set to ZERO_ADDRESS on error
-      }
-    };
-
-    if (listing) {
-      getBuyer(listing);
-    }
-  }, []);
 
   return (
     <>
@@ -202,13 +139,13 @@ export default function MyListingsSidebar({
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <button
-                  onClick={handleOpenUpdateListingModal}
+                  onClick={makeOffer}
                   className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold 
                     py-2.5 sm:py-3 px-4 rounded flex items-center justify-center 
                     transition-colors text-sm sm:text-base"
                 >
                   <Edit className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                  Edit Listing
+                  Place New Offer
                 </button>
                 <button
                   onClick={handleCancel}
@@ -218,27 +155,35 @@ export default function MyListingsSidebar({
                   disabled={isDisabled}
                 >
                   <Trash className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                  Cancel Listing
+                  Cancel Offer
                 </button>
               </div>
 
-              <button
-                onClick={handleOpenUpdateListingPlan}
-                className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold 
-                  py-2.5 sm:py-3 px-4 rounded flex items-center justify-center 
-                  transition-colors text-sm sm:text-base"
-              >
-                <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                Update Listing Plan
-              </button>
-            </div>
-
-            {/* Buyers Section */}
-            <div className="space-y-4">
-              <h3 className="text-base sm:text-lg md:text-xl font-semibold">
-                Manage Buyer
-              </h3>
-              <div className="space-y-2 max-h-[40vh] overflow-y-auto rounded-lg border border-gray-200">
+              {/* Buyers Section */}
+              <div className="space-y-4">
+                <h3 className="text-base sm:text-lg md:text-xl font-semibold">
+                  Manage Offer
+                </h3>
+                <div className="space-y-2 rounded-lg border border-gray-200">
+                  <div
+                    className=" 
+                      p-3 sm:p-4 hover:bg-gray-50 transition-colors border-b 
+                      last:border-b-0 border-gray-200 gap-3 sm:gap-4"
+                  >
+                    <div>
+                      <span className="text-base font-bold">
+                        Your Offer was: {""}
+                      </span>
+                      <span className="text-base font-bold capitalize">
+                        {toEther(BigInt(listing.price))} {listing.symbol}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-base font-bold italic">
+                    {offerStatus}
+                  </span>
+                </div>
+                {/* <div className="space-y-2 max-h-[40vh] overflow-y-auto rounded-lg border border-gray-200">
                 <div
                   className="flex flex-col sm:flex-row sm:items-center justify-between 
                       p-3 sm:p-4 hover:bg-gray-50 transition-colors border-b 
@@ -293,29 +238,8 @@ export default function MyListingsSidebar({
           </div>
         </div>
       </div>
-      {listing && (
-        <>
-          <UpdateListingModal
-            listing={listing}
-            onClose={handleCloseUpdateListingModal}
-            isOpen={openUpdateListingModal}
-            onSuccess={handleClose}
-          />
-          <UpdateListingPlanModal
-            listingId={listing?.listingId}
-            listingPlan={listing?.listingPlan}
-            onClose={handleCloseUpdateListingPlan}
-            isOpen={openUpdateListingPlanModal}
-            onSuccess={handleClose}
-          />
-          <ApproveBuyerModal
-            listingId={listing?.listingId}
-            onClose={handleCloseApproveBuyerForListing}
-            isOpen={openApproveBuyerForListing}
-            onSuccess={handleClose}
-          />
-        </>
-      )}
+      
+       
     </>
   );
 }

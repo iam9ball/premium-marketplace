@@ -15,15 +15,15 @@ import { chain } from "../constant";
 
 
 interface ButtonProps {
-    actionLabel?: string;
-    onClick?: () => void;   
-    disabled?: boolean;
-    variant?: 'connect';
-    primaryConnect?: boolean;
-    icon?: IconType;
-    classNames?: string;
-    defaultConnectButton?: boolean;
-    
+  actionLabel?: string;
+  onClick?: () => void;
+  disabled?: boolean;
+  variant?: "connect";
+  primaryConnect?: boolean;
+  icon?: IconType;
+  classNames?: string;
+  defaultConnectButton?: boolean;
+  style?: React.CSSProperties;
 }
 
 const wallets = [
@@ -41,7 +41,8 @@ export default function Button({
     primaryConnect,
     icon: Icon,
     classNames,
-    defaultConnectButton
+    defaultConnectButton,
+    style,
 }: ButtonProps) {
   
   const width = useWindowWidth();
@@ -104,94 +105,87 @@ export default function Button({
    
   };
 
-  return (
-    
-    variant === "connect" ? (
-      <ConnectButton
-        client={client}
-        wallets={wallets}
-        auth={{
-          isLoggedIn: async (address) => {
-            
-              const authResult = await isLoggedIn(address);
-              if (!authResult) {
-                return false;
-              }
-             else {
-              return true;
+  return variant === "connect" ? (
+    <ConnectButton
+      client={client}
+      wallets={wallets}
+      auth={{
+        isLoggedIn: async (address) => {
+          const authResult = await isLoggedIn(address);
+          if (!authResult) {
+            return false;
+          } else {
+            return true;
           }
-            
-          },
-         doLogin: async (params) => {
-          await login(params);  
-         }, 
-         getLoginPayload: async ({address}) => 
-          await generatePayload({address}),
-         doLogout: async () => {
-          console.log("logging out")
-          await logout()
-         }
-         
-
-        }}
-        connectModal={{
-          size: "compact",
-          title: "Connect wallet",
-          showThirdwebBranding: false,
-        }}
-        connectButton={{
-          label: "Connect",
-          className: primaryConnect? "" : defaultConnectStyle,
-          style: {
-            color:"white",
-            minWidth: "96px",
-            minHeight: "40px",
-            width: Width,
-            height: Height,
-            fontSize: FontSize,
-            padding: "12px 16px",
-            fontWeight: primaryConnect ? "900" : "500",
-            borderRadius: `${primaryConnect && '0px 0px 5px 5px'}`,
-            backgroundColor: primaryConnect ? "black": ""
-          },
-          
-        }}
-         signInButton={{
-          label: "Sign in",
-          className: primaryConnect? "" : defaultConnectStyle,
-          style: {
-            color:"white",
-            minWidth: "96px",
-            minHeight: "40px",
-            width: Width,
-            height: Height,
-            fontSize: FontSize,
-            padding: "12px 16px",
-            fontWeight: primaryConnect ? "900" : "500",
-            borderRadius: `${primaryConnect && '0px 0px 5px 5px'}`,
-            backgroundColor: primaryConnect ? "black": ""
-          },
-          
-        }}
-        detailsButton={{
-
-    style: {
-      width: Width,
-      borderRadius: `${primaryConnect && '0px 0px 5px 5px'}`,
-      maxWidth:  Width,
-    },
-  }}
-        onConnect={handleConnect}
-      />
-    ) : (
-      <button
-        onClick={(e) => { e.stopPropagation(); onClick && onClick(); }}
-        disabled={disabled}
-        className={`relative disabled:opacity-70 disabled:cursor-not-allowed transition flex items-center justify-center cursor-pointer text-center ${classNames}`}
-      >
-        {Icon && (<Icon size={24} className="absolute left-4 top-3" />)}
-        {actionLabel}
-      </button>
-    )
+        },
+        doLogin: async (params) => {
+          await login(params);
+        },
+        getLoginPayload: async ({ address }) =>
+          await generatePayload({ address }),
+        doLogout: async () => {
+          console.log("logging out");
+          await logout();
+        },
+      }}
+      connectModal={{
+        size: "compact",
+        title: "Connect wallet",
+        showThirdwebBranding: false,
+      }}
+      connectButton={{
+        label: "Connect",
+        className: primaryConnect ? "" : defaultConnectStyle,
+        style: {
+          color: "white",
+          minWidth: "96px",
+          minHeight: "40px",
+          width: Width,
+          height: Height,
+          fontSize: FontSize,
+          padding: "12px 16px",
+          fontWeight: primaryConnect ? "900" : "500",
+          borderRadius: `${primaryConnect && "0px 0px 5px 5px"}`,
+          backgroundColor: primaryConnect ? "black" : "",
+        },
+      }}
+      signInButton={{
+        label: "Sign in",
+        className: primaryConnect ? "" : defaultConnectStyle,
+        style: {
+          color: "white",
+          minWidth: "96px",
+          minHeight: "40px",
+          width: Width,
+          height: Height,
+          fontSize: FontSize,
+          padding: "12px 16px",
+          fontWeight: primaryConnect ? "900" : "500",
+          borderRadius: `${primaryConnect && "0px 0px 5px 5px"}`,
+          backgroundColor: primaryConnect ? "black" : "",
+        },
+      }}
+      detailsButton={{
+        style: {
+          width: Width,
+          borderRadius: `${primaryConnect && "0px 0px 5px 5px"}`,
+          maxWidth: Width,
+        },
+      }}
+      onConnect={handleConnect}
+    />
+  ) : (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick && onClick();
+      }}
+      disabled={disabled}
+      className={`relative disabled:opacity-70 disabled:cursor-not-allowed transition flex items-center justify-center cursor-pointer text-center ${classNames}`}
+      style={style}
+    >
+      {Icon && <Icon size={24} className="absolute left-4 top-3" />}
+      {actionLabel}
+    </button>
   );
 }

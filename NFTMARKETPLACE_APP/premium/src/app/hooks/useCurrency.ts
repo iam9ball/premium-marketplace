@@ -44,7 +44,9 @@ export const useCurrency = () => {
           method: "getAllCurrency"
         });
         const filteredCurrencyAddress = datas.filter(addr => addr !== ZERO_ADDRESS);
-        return await Promise.all(filteredCurrencyAddress.map((addr) => fetchCurrencyInfo(addr)));
+        const response = await Promise.all(filteredCurrencyAddress.map((addr) => fetchCurrencyInfo(addr)));
+        console.log("response", response);
+        return response;
 
       } catch (error) {
         console.error("Failed to fetch currency addresses:", error);
@@ -64,13 +66,21 @@ export const useCurrency = () => {
     revalidateOnMount: true,
     revalidateIfStale: false
   });
-
-  const formattedCurrency = data?.map((token) => ({
+ console.log("data", data);
+  const formattedCurrency = useMemo(() => {
+    if (!data) return [];
+    return data?.map((token) => ({
     value: token.id,
     symbol: token.symbol,
     image: token.image,
     address: token.contract_address === "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0" ? NATIVE_TOKEN : token.contract_address 
   }));
+  }, [data])
+  
+   console.log("FC", formattedCurrency);
+   console.log("error", error);
+   console.log("lo", isLoading);
+
 
   return {
     formattedCurrency,

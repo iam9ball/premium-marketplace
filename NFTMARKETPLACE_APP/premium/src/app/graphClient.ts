@@ -7,67 +7,65 @@ const GRAPH_ENDPOINT = "https://subgraph.satsuma-prod.com/peters-team--628380/pr
 const myListingsQuery = `
 query ListingsQuery(
   $creator: String!, 
-  $orderBy: String, 
-  $first: Int, 
-  $skip: Int
+  $orderBy: String
 ) {
   newListingCreateds(
-    where: { listingCreator: $creator },
+    where: { listingCreator: $creator},
     orderBy: $orderBy,
-    first: $first,
-    skip: $skip
   ) {
     listingId
-    id
-    listingCreator
-     status: listing_status
-    tokenId: listing_tokenId
-    currency: listing_currency
-    tokenType: listing_tokenType
-    listingType: listing_listingType
-    endTimestamp: listing_endTimestamp
-    pricePerToken: listing_pricePerToken
-    assetContract: listing_assetContract
-    startTimestamp: listing_startTimestamp
-    reserved: listing_reserved
+   
   }
 }`;
 
-const myListingLengthQuery = `
-query ListingsLengthQuery($creator: String!) {
-newListingCreateds( where: { listingCreator: $creator }){
-listingId
-}
-}`
-
-export const getListingLength = async (creatorAddress: string) => {
-  try {
-    const variables = { creator: creatorAddress };
-    const data = await request(GRAPH_ENDPOINT, myListingLengthQuery, variables);
-    return data.newListingCreateds?.length || 0;
-  } catch (error) {
-    console.error('Error fetching listing length:', error);
-   
+const myOffersQuery = `
+query OffersQuery(
+  $sender: String!,
+  
+) {
+  newOffers(
+    where: { sender: $sender},
+    
+  ) {
+    offerId:internal_id
+    listingId
   }
-};
+}`;
 
-export const getLimitedListings = async (
+
+
+export const getMyListings = async (
   creatorAddress: string, 
-  start: number,
-  limit: number 
+ 
 ) => {
   try {
     const variables = {
       creator: creatorAddress,
-      orderBy: 'listing_startTimestamp',
-      first: limit,
-      skip: start
+      orderBy: 'listing_startTimestamp'
     };
 
-    const data = await request(GRAPH_ENDPOINT, myListingsQuery, variables);
+    const data:any = await request(GRAPH_ENDPOINT, myListingsQuery, variables);
     return data.newListingCreateds || [];
   } catch (error) {
-    console.error('Error fetching limited listings:', error);
+    throw error;
+    
+  }
+};
+
+export const getMyOffers = async (
+ sender : string,
+ 
+) => {
+  try {
+    const variables = {
+      sender: sender,
+      
+    };
+
+    const data:any = await request(GRAPH_ENDPOINT, myOffersQuery, variables);
+    return data.newoffers || [];
+  } catch (error) {
+    throw error;
     
   }
 };

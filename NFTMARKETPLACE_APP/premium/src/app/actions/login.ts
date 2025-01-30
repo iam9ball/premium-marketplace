@@ -10,7 +10,7 @@ import { client } from '../client';
 const privateKey = process.env.PRIVATE_KEY!;
  
 const auth = createAuth({
-    adminAccount: privateKey ?  privateKeyToAccount({client, privateKey}) : await generateAccount({client}),
+    adminAccount: privateKeyToAccount({client, privateKey}),
     domain: process.env.DOMAIN! || 'localhost:3000',
     client,
     jwt: {

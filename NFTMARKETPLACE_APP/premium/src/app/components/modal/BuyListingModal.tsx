@@ -12,6 +12,7 @@ import { showToast } from "../WalletToast";
 import { useSWRConfig } from "swr";
 import { usePathname } from "next/navigation";
 import useInfiniteScrollMutateStore from "@/app/hooks/useInfiniteScrollMutateStore";
+import useListingId from "@/app/hooks/useListingId";
 
 
 
@@ -31,31 +32,40 @@ import useInfiniteScrollMutateStore from "@/app/hooks/useInfiniteScrollMutateSto
    const account = useActiveAccount();
    const { mutate } = useSWRConfig();
     const pathName = usePathname();
-    const { mutate:mutateListing } = useInfiniteScrollMutateStore();
+    const { marketplaceRefreshListings } = useInfiniteScrollMutateStore();
+    const {listingId} = useListingId();
+
    
    const onSubmit: SubmitHandler<FieldValues> = async (data) => {
      if (account) {
       setIsDisabled(true);
       try{
-       await buyListing(data.recipientAddress, buyListingModal.listingId!, account).then(async (data:any) => {
-      if(data.success){
-        toast.success(data.message!);
-        buyListingModal.onClose();
-        reset(); 
-        
-       switch(true){
-        case pathName == `listing/${buyListingModal.listingId}`: 
-        await mutate(`listing/${buyListingModal.listingId}`);
-        break;
-        default: 
-       await  mutateListing?.();
-        break;
-       }
-      }
-      else {
-        toast.error(data.message);
-      }
-    })
+        console.log(data.recipientAddress);
+        console.log(listingId);
+        console.log(account);
+       await buyListing(data.recipientAddress, listingId!, account).then(
+         async (data: any) => {
+           if (data.success) {
+             toast.success(data.message!);
+             buyListingModal.onClose();
+             reset();
+
+             console.log("yes clicked");
+
+             switch (true) {
+               case pathName == `listing/${listingId}`:
+                 await mutate(`listing/${listingId}`);
+                 break;
+               default:
+                 await marketplaceRefreshListings?.();
+                 break;
+             }
+             console.log("no clicked");
+           } else {
+             toast.error(data.message);
+           }
+         }
+       );
       } 
       catch (error: any) {
          toast.error(error.message);
@@ -80,10 +90,10 @@ import useInfiniteScrollMutateStore from "@/app/hooks/useInfiniteScrollMutateSto
 {( bodyContent = (
      
     <>      
-      <Heading title="Who is the recipient?" subtitle="Choose who will recieve this art" titleClassName="text-xl font-bold ml-4"  subtitleClassName="font-light text-sm text-neutral-500 mt-1 ml-4 mb-2"/>
+      <Heading title="Who is the recipient?" subtitle="Choose who will recieve this art" titleClassName="text-xl font-bold "  subtitleClassName="font-light text-sm text-neutral-500 mt-1  mb-2"/>
         <div className="flex flex-col gap-2">
-          <label htmlFor="assetAddress" className="block text-sm font-black text-black">Recipient Address</label>
-          <input type="text" id="assetAddress" {...register("recipientAddress", {
+          <label htmlFor="recipientAddress" className="block text-sm font-black text-black">Recipient Address</label>
+          <input type="text" id="recipientAddress" {...register("recipientAddress", {
              required: true,
           })} className="border border-gray-300 rounded-lg p-2 w-full pl-6 placeholder:text-sm" placeholder="0x123...789" />   
        </div>

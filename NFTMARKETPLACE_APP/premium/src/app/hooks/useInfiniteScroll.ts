@@ -8,15 +8,15 @@ import { useInView } from 'react-intersection-observer';
 
 
 interface InfiniteScrollOptions<T> {
-  fetchData: (key: string) => Promise<{ items: T[]; totalCount: number }> ;
-  initialTotalCount: number | null;
+  fetchData: (key: string) => Promise<{ items: T[]; totalCount: number } | undefined> ;
+  initialTotalCount: number | undefined;
   revalidateKey: string;
-  getTotalCount?: () => Promise<number | null>;
+  getTotalCount?: () => Promise<number | undefined>;
 }
 
 export function useInfiniteScroll<T>({
   fetchData,
-  initialTotalCount,
+  initialTotalCount = undefined,
   revalidateKey,
   getTotalCount,
 }: InfiniteScrollOptions<T>) {
@@ -26,7 +26,7 @@ export function useInfiniteScroll<T>({
   });
   
   const [isMounted, setIsMounted] = useState(false);
-    const [totalCount, setTotalCount] = useState<number | null>(initialTotalCount);
+    const [totalCount, setTotalCount] = useState<number | undefined>(initialTotalCount);
     
 
 
@@ -37,25 +37,26 @@ export function useInfiniteScroll<T>({
 
   useEffect(() => {
     const initializeTotalCount = async () => {
-    if (getTotalCount && totalCount === null) {
+    if (getTotalCount) {
       try{
         const newTotalCount = await getTotalCount();
         setTotalCount(newTotalCount);
       } catch (error) {
         console.error('Error updating total count:', error);
+        throw error;
       }
      };
    }
     initializeTotalCount();
-  }, [getTotalCount, totalCount]);
+  }, [getTotalCount]);
 
   const getKey: SWRInfiniteKeyLoader = useCallback(
     (pageIndex, previousPageData) => {
-      if (!isMounted || totalCount === null) return null;
+      if (!isMounted) return null;
       if (previousPageData && !previousPageData.items.length) return null;
       return `${revalidateKey}-page-${pageIndex}`;
     },
-    [isMounted, totalCount, revalidateKey]
+    [isMounted, revalidateKey]
   );
 
   const {
@@ -71,6 +72,7 @@ export function useInfiniteScroll<T>({
     revalidateOnReconnect: true,
     persistSize: false,
     refreshInterval: 5000,
+    shouldRetryOnError: false,
     
   });
 
@@ -84,21 +86,23 @@ export function useInfiniteScroll<T>({
       return originalMutate()
     } catch (error) {
       console.error('Error updating after mutation:', error);
+      throw error;
     }
   }, [originalMutate, getTotalCount]);
 
   useEffect(() => {
-    if (isMounted && inView && !isLoading && totalCount !== null) {
+    if (isMounted && inView && !isLoading && totalCount !== undefined) {
       const currentItemCount = pages?.reduce(
         (total, page) => total + (page?.items?.length || 0),
         0
       ) || 0;
 
-      if (currentItemCount < totalCount) {
+      if (totalCount && currentItemCount < totalCount) {
         setSize((prev) => prev + 1);
       }
     }
   }, [inView, isLoading, totalCount, pages, setSize, isMounted]);
+  console.log("ERROR", error);
 
   return {
     ref,

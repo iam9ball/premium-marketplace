@@ -5,6 +5,9 @@ import MyOffers from "./MyOffers";
 
 export default function Dashboard() {
   return (
-    <MyListings/>
+    <div className="min-h-[100vh]">
+    {/* <MyListings/> */}
+    <MyOffers/>
+    </div>
   );
 }

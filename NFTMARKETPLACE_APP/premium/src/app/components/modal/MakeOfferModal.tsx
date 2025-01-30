@@ -9,22 +9,21 @@ import toast from "react-hot-toast";
 import { showToast } from "../WalletToast";
 import useMakeOfferModal from "@/app/hooks/useMakeOfferModal";
 import SwitchablePicker, { PickerType } from "../SwitchablePicker";
-import dayjs from 'dayjs';
+import dayjs from "dayjs";
 import { makeOffer } from "@/app/contracts/offer";
-
-
+import useListingId from "@/app/hooks/useListingId";
 
 interface DateType {
   $d: Date;
 }
 
-
 export default function OfferModal() {
   const account = useActiveAccount();
   const [isDisabled, setIsDisabled] = useState(false);
   const offerModal = useMakeOfferModal();
-  const [type, setType] = useState<PickerType>('date');
-  
+  const [type, setType] = useState<PickerType>("date");
+  const { listingId } = useListingId();
+
   const {
     register,
     handleSubmit,
@@ -37,69 +36,85 @@ export default function OfferModal() {
       offerAmount: null,
       offerDuration: {
         date: 0,
-        time: 0
-      }
+        time: 0,
+      },
     },
   });
-
-
-  
 
   // Watch the current duration value based on type
   const pickerValue = watch(`offerDuration.${type}`);
 
-  
-
-const formattedTimeStamp = (time: DateType, date: DateType) => {
-  const year = dayjs(date?.$d).year();
-  const month = dayjs(date?.$d).month();
-  const day = dayjs(date?.$d).date();
-  const hour = dayjs(time?.$d).hour();
-   const minute = dayjs(time?.$d).minute();
-   const seconds = dayjs(time?.$d).second();
-  const formattedTime = `${year}-${month + 1}-${day} ${hour}:${minute}:${seconds}`;  
-  const timeStamp = dayjs(formattedTime).unix();
-  return timeStamp;
-  
-};
-  const onSubmit = (data: FieldValues) => {
-   const timeStamp = formattedTimeStamp(data.offerDuration.time, data.offerDuration.date);
-   if(timeStamp < Math.floor(Date.now() / 1000)) {
-     toast.error('Offer duration should be greater than current time');
-     return;
-   }
-  const duration = timeStamp - Math.floor(Date.now() / 1000);
-    if(account) {
+  const formattedTimeStamp = (time: DateType, date: DateType) => {
+    const year = dayjs(date?.$d).year();
+    const month = dayjs(date?.$d).month();
+    const day = dayjs(date?.$d).date();
+    const hour = dayjs(time?.$d).hour();
+    const minute = dayjs(time?.$d).minute();
+    const seconds = dayjs(time?.$d).second();
+    const formattedTime = `${year}-${
+      month + 1
+    }-${day} ${hour}:${minute}:${seconds}`;
+    const timeStamp = dayjs(formattedTime).unix();
+    return timeStamp;
+  };
+  const onSubmit = async (data: FieldValues) => {
+    const timeStamp = formattedTimeStamp(
+      data.offerDuration.time,
+      data.offerDuration.date
+    );
+    if (timeStamp < Math.floor(Date.now() / 1000)) {
+      toast.error("Offer duration should be greater than current time");
+      return;
+    }
+    const duration = timeStamp - Math.floor(Date.now() / 1000);
+    if (account) {
       setIsDisabled(true);
-      makeOffer(BigInt(duration), data.offerAmount, offerModal.listingId!, account).then((data) => {
-        
-           if(data.success){
-          toast.success(data.message!);
-          offerModal.onClose();
-          reset();
-           } else {
-            toast.error(data.message!)
-           }
-           setIsDisabled(false);
-        
-      })
+      console.log(duration);
+      console.log(data.offerAmount);
+      console.log(listingId);
+      try {
+        await makeOffer(
+          BigInt(duration),
+          data.offerAmount,
+          listingId!,
+          account
+        ).then(async (data) => {
+          if (data.success) {
+            toast.success(data.message!);
+            offerModal.onClose();
+            reset();
+          } else {
+            toast.error(data.message!);
+          }
+        });
+      } catch (error: any) {
+        toast.error(error.message);
+        console.error(error);
+      } finally {
+        setIsDisabled(false);
+      }
     } else {
       showToast();
+      offerModal.onClose();
     }
-    
   };
 
-  const setCustomValues = useCallback((key: any, value: any) => {
-    setValue(key, value, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
-  }, [setValue]);
+  const setCustomValues = useCallback(
+    (key: any, value: any) => {
+      setValue(key, value, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    },
+    [setValue]
+  );
 
-  const onDurationChange = useCallback((value: any) => { 
- 
-    setCustomValues(`offerDuration.${type}`, value);
-  }, [setCustomValues, type]);
+  const onDurationChange = useCallback(
+    (value: any) => {
+      setCustomValues(`offerDuration.${type}`, value);
+    },
+    [setCustomValues, type]
+  );
 
   const bodyContent = (
     <div className="flex flex-col gap-7">
@@ -109,25 +124,27 @@ const formattedTimeStamp = (time: DateType, date: DateType) => {
       />
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
-          <label 
-            htmlFor="tokenPrice" 
+          <label
+            htmlFor="tokenPrice"
             className="block sm:text-xs text-[10px] font-black text-black"
           >
             Amount
           </label>
-          <input 
-            type="number" 
-            id="tokenPrice"  
-            {...register("offerAmount", { required: true })} 
-            className={`${errors.offerAmount ? "border-red-500" : "border-gray-300"} border-2 rounded-lg p-2 w-full placeholder:text-[13px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`} 
-            placeholder="0" 
+          <input
+            type="number"
+            id="tokenPrice"
+            {...register("offerAmount", { required: true })}
+            className={`${
+              errors.offerAmount ? "border-red-500" : "border-gray-300"
+            } border-2 rounded-lg p-2 w-full placeholder:text-[13px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+            placeholder="0"
           />
         </div>
 
-        <SwitchablePicker 
-          onChange={onDurationChange} 
-          setType={setType} 
-          type={type} 
+        <SwitchablePicker
+          onChange={onDurationChange}
+          setType={setType}
+          type={type}
           value={pickerValue}
         />
       </div>
@@ -137,10 +154,10 @@ const formattedTimeStamp = (time: DateType, date: DateType) => {
   return (
     <div>
       <Modal
-        title="Buy from listing"
+        title="Make offer"
         isOpen={offerModal.isOpen}
-        onClose={offerModal.onClose}  
-        forward={handleSubmit(onSubmit)}   
+        onClose={offerModal.onClose}
+        forward={handleSubmit(onSubmit)}
         forwardLabel="Submit"
         body={bodyContent}
         disabled={isDisabled}
