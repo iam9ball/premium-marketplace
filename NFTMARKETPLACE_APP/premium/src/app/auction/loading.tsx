@@ -1,4 +1,4 @@
-import LoadingSkeleton from "../components/auction/AuctionSkeleton";
+import LoadingSkeleton from "./AuctionSkeleton";
 
 export default function Loading() {
   return <LoadingSkeleton />;

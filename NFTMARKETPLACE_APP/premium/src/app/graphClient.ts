@@ -18,6 +18,20 @@ query ListingsQuery(
   }
 }`;
 
+const myAuctionsQuery = `
+query AuctionsQuery(
+  $creator: String!,
+  
+) {
+  newAuctions(
+    where: { auctionCreator: $creator},
+    
+  ) {
+    auctionId
+    assetContract
+  }
+}`;
+
 const myOffersQuery = `
 query OffersQuery(
   $sender: String!,
@@ -29,6 +43,26 @@ query OffersQuery(
   ) {
     offerId:internal_id
     listingId
+  }
+}`;
+
+
+
+const myListingsOffersQuery = `
+query OffersQuery(
+  $listingId_in: [String!],
+  
+) {
+  newOffers(
+    where: { listingId_in: $listingId_in},
+    
+  ) {
+    listingId
+    offerId:internal_id
+    totalPrice
+    expirationTime
+    blockTimestamp
+    transactionHash
   }
 }`;
 
@@ -52,6 +86,23 @@ export const getMyListings = async (
   }
 };
 
+export const getMyAuctions = async (
+  creatorAddress: string,
+) => {
+  try {
+    const variables = {
+      creator: creatorAddress,
+      
+    };
+
+    const data:any = await request(GRAPH_ENDPOINT, myAuctionsQuery, variables);
+    return data.newAuctions || [];
+  } catch (error) {
+    throw error;
+    
+  }
+}
+
 export const getMyOffers = async (
  sender : string,
  
@@ -63,9 +114,25 @@ export const getMyOffers = async (
     };
 
     const data:any = await request(GRAPH_ENDPOINT, myOffersQuery, variables);
-    return data.newoffers || [];
+    return data.newOffers || [];
   } catch (error) {
     throw error;
     
   }
 };
+
+export const getMyOffersNotif = async ( listingId_in: string[]) => {
+
+  try {
+    const variables = {
+      listingId_in: listingId_in,
+      
+    };
+    const data:any = await request(GRAPH_ENDPOINT, myListingsOffersQuery, variables);
+     return data.newOffers || [];
+  } catch(error){
+     throw error;
+  }
+ 
+ 
+}

@@ -1,8 +1,8 @@
-import AuctionCommentary from "../components/auction/AuctionCommentary";
-import AuctionDetails from "../components/auction/AuctionDetails";
-import BiddingSystem from "../components/auction/BiddingSystem";
-import LiveChat from "../components/auction/LiveChat";
-import RotatingCube from "../components/auction/RotatingItem";
+import AuctionCommentary from "./AuctionCommentary";
+import AuctionDetails from "./AuctionDetails";
+import BiddingSystem from "./BiddingSystem";
+import LiveChat from "./LiveChat";
+import RotatingCube from "./RotatingItem";
 import Container from "../components/Container";
 import image4 from "@public/image4.jpeg";
 

@@ -40,7 +40,7 @@ export default function RootLayout({
         <CreateNftModal/>
         <CreateListingModal/>
         <CreateAuctionModal/>
-         <Dialog body="Who are you buying this art for? if yourself, 'Click yes'."/>
+         <Dialog body="Who are you buying this art for? if yourself, Click yes"/>
       <BuyListingModal/>
       <MakeOfferModal/>
         <Footer/> 

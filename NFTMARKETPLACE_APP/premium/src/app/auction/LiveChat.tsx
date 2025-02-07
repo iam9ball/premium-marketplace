@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import Button from '../components/Button'
 
 interface ChatMessage {
   id: number
@@ -56,12 +57,14 @@ export default function LiveChat() {
           className="flex-grow px-4 py-2 rounded-l-md focus:outline-none focus:ring-2 focus:ring-purple-500"
           placeholder="Join the conversation..."
         />
-        <button
-          onClick={() => addMessage(input)}
-          className="bg-purple-600 text-white px-4 py-2 rounded-r-md hover:bg-purple-700 transition-colors"
-        >
-          Send
-        </button>
+        <Button
+        classNames='bg-purple-600 text-white px-4 py-2 rounded-r-md hover:bg-purple-700 transition-colors'
+        onClick={() => addMessage(input)}
+        actionLabel='Send'
+        />
+         
+         
+       
       </div>
     </div>
   )

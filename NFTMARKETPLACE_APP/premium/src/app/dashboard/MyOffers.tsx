@@ -21,17 +21,20 @@ import { NATIVE_TOKEN } from "../utils/address";
 import { getOffer } from "../contracts/offerInfo";
 import {ListingItem} from "./MyListings";
 import MyOffersSidebar from "./MyOffersSidebar";
+import authAddress from "../utils/authAddress";
 
 type OfferItem = {
   offerId: bigint;
   price: string;
   offerStatus: number;
+  offerPrice: string;
 }
+
+
 
 export type Offers = OfferItem & ListingItem; 
 
-export default function MyListings() {
-  const makeOfferModal = useMakeOfferModal();
+export default function MyOffers() {
   const [selectedListing, setSelectedListing] = useState<Offers>();
   const [isVisible, setIsVisible] = useState(false);
   const PAGE_SIZE = 8;
@@ -41,20 +44,20 @@ export default function MyListings() {
 
   const fetchActiveOffersWithCount = async (page: number, size: number) => {
     try {
-      const limitedOffer = await getMyOffers(
-        "0xfc3c3F0d793EaC242051C98fc0DC9be60f86d964"
-      );
-     
+        const address = await authAddress();
+      const limitedOffer = await getMyOffers(address!);
+      console.log("limitedOffer", limitedOffer);
       const activeOffers: any[] = [];
 
       const result = await Promise.allSettled(
-        limitedOffer.map(async (offer: any) => {
+         limitedOffer.map(async (offer: any) => {
           const offerResult = await getOffer(offer.offerId, offer.listingId);
 
          
           return { ...offerResult , offerId: offer.offerId };
         })
       );
+      console.log("result", result);
 
       result.forEach((res: any) => {
         if (res.status === "fulfilled" && res.value) {
@@ -65,6 +68,7 @@ export default function MyListings() {
       const totalCount = activeOffers.length;
 
       const paginatedOffers = activeOffers.slice(page, size);
+      console.log("page", paginatedOffers);
 
       console.log("page", paginatedOffers);
       return { totalCount, paginatedOffers };
@@ -139,8 +143,8 @@ export default function MyListings() {
                 symbol: symbol,
                 listingPlan: listing.listingType,
                 offerId: offers.offerId,
-                offerStatus: offers.offerStatus,
-
+                offerStatus: offers.status,
+                offerPrice: toEther(offers.totalPrice),
               };
               console.log("yes");
               return (

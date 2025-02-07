@@ -12,6 +12,7 @@ import SwitchablePicker, { PickerType } from "../SwitchablePicker";
 import dayjs from "dayjs";
 import { makeOffer } from "@/app/contracts/offer";
 import useListingId from "@/app/hooks/useListingId";
+import useInfiniteScrollMutateStore from "@/app/hooks/useInfiniteScrollMutateStore";
 
 interface DateType {
   $d: Date;
@@ -23,6 +24,8 @@ export default function OfferModal() {
   const offerModal = useMakeOfferModal();
   const [type, setType] = useState<PickerType>("date");
   const { listingId } = useListingId();
+    const { dashboardRefreshListings } = useInfiniteScrollMutateStore();
+
 
   const {
     register,
@@ -80,7 +83,9 @@ export default function OfferModal() {
           account
         ).then(async (data) => {
           if (data.success) {
+            await dashboardRefreshListings?.();
             toast.success(data.message!);
+
             offerModal.onClose();
             reset();
           } else {

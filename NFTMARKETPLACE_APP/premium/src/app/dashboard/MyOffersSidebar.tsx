@@ -168,20 +168,20 @@ export default function MyOffersSidebar({
                   <div
                     className=" 
                       p-3 sm:p-4 hover:bg-gray-50 transition-colors border-b 
-                      last:border-b-0 border-gray-200 gap-3 sm:gap-4"
+                      last:border-b-0 border-gray-200 gap-3 sm:gap-4 text-center md:text-start"
                   >
                     <div>
                       <span className="text-base font-bold">
                         Your Offer was: {""}
                       </span>
                       <span className="text-base font-bold capitalize">
-                        {toEther(BigInt(listing.price))} {listing.symbol}
+                        {listing.offerPrice} {listing.symbol}
                       </span>
                     </div>
+                    <span className="text-base font-bold italic">
+                      {offerStatus}
+                    </span>
                   </div>
-                  <span className="text-base font-bold italic">
-                    {offerStatus}
-                  </span>
                 </div>
                 {/* <div className="space-y-2 max-h-[40vh] overflow-y-auto rounded-lg border border-gray-200">
                 <div
@@ -238,8 +238,6 @@ export default function MyOffersSidebar({
           </div>
         </div>
       </div>
-      
-       
     </>
   );
 }

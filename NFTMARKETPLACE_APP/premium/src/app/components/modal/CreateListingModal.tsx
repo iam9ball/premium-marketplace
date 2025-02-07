@@ -46,11 +46,12 @@ const CreateListingModal = () => {
     handleSubmit,
     setValue,
     reset,
+    watch,
     formState: { errors },
   } = useForm({
     defaultValues: {
       listingPlan: null,
-      assetAddress: "",
+      assetAddress: createListingModal.address,
       assetId: null,
       assetPrice: null,
       currencyAddress: null,
@@ -68,6 +69,10 @@ const CreateListingModal = () => {
     setStep((value) => value - 1);
   };
 
+   const assetAddress = watch("assetAddress");
+   useEffect(() => {
+     setCustomValues("assetAddress", createListingModal.address);
+   }, [createListingModal.address]);
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     if (step !== STEPS.INFO) {
       return onNext();
@@ -336,6 +341,7 @@ const CreateListingModal = () => {
                   required: true,
                 })}
                 placeholder="0x123...789"
+                value={assetAddress || ""}
               />
             </div>
 

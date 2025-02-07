@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useCallback, useState, useMemo } from "react";
+import { useEffect, useCallback, useState, useMemo, use } from "react";
 import Card from "../components/card/Card";
 import { client } from "../client";
 import { fetchNFT, listings } from "../contracts/listingInfo";
@@ -10,12 +10,13 @@ import Error from "../components/Error";
 import { CardContainer } from "../components/card/CardContainer";
 import CardSkeletonContainer from "../components/card/CardSkeleton";
 import { fetchCurrencyInfo } from "../hooks/useCurrency";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toEther } from "thirdweb/utils";
 import { Contract } from "../utils/Contract";
 import { useInfiniteScroll } from "../hooks/useInfiniteScroll";
 import useInfiniteScrollMutateStore from "@/app/hooks/useInfiniteScrollMutateStore";
 import Container from "../components/Container";
+import { showToast } from "../components/WalletToast";
 
 export default function Listings() {
   const createListingModal = useCreateListingModal();
@@ -23,6 +24,7 @@ export default function Listings() {
   const router = useRouter();
   const PAGE_SIZE = 8;
   const [initialLoading, setInitialLoading] = useState(true);
+  const searchParams = useSearchParams();
    const LimitedListings = async (start = 0, limit: null | number = null) => {
     try {
       const allListings = await listings();
@@ -129,6 +131,12 @@ export default function Listings() {
   setInitialLoading(false);
   },[mutate])
  
+  useEffect(() => {
+    if (searchParams.get('redirected')) {
+        showToast("Please log in", "Connect your wallet to login.");
+      
+    }
+  }, []);
  
   console.log("error", error);
  if (error) return <Error error={error} />;

@@ -4,7 +4,7 @@ import { BiSearch } from "react-icons/bi";
 
 export default function Search() {
   return (
-  <div className="border-[1px] z-10 border-[#8F9092] w-[250px] sm:w-[480px] py-[3px] bg-gradient-to-b from-[#D8D9DB] via-slate-300 to-[#fff] md:py-2 px-3 rounded-full shadow-xl hover:border-[1px] hover:z-20 hover:shadow-2xl transition cursor-pointer">
+  <div className="border-[1px] z-10 border-[#8F9092] w-[250px] sm:w-[480px] md:w-[420px] lg:w-[500px] py-[3px] bg-gradient-to-b from-[#D8D9DB] via-slate-300 to-[#fff] md:py-2 px-3 rounded-full shadow-xl hover:border-[1px] hover:z-20 hover:shadow-2xl transition cursor-pointer">
       <div className="flex items-center justify-between">
         <input 
           type='text' 

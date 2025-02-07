@@ -1,11 +1,13 @@
-import { prepareContractCall, readContract, sendTransaction } from "thirdweb";
+import { prepareContractCall, readContract, sendTransaction, sendAndConfirmTransaction, toWei } from "thirdweb";
 import { getListing } from "./listingInfo";
 import { NATIVE_TOKEN } from "../utils/address";
 import { Account } from "thirdweb/wallets";
 import { marketContract } from "../constant";
 
-export const makeOffer = async (duration: bigint, totalPrice: bigint , listingId: bigint, account: Account) => {
-let fee: bigint | undefined ;
+export const makeOffer = async (duration: bigint, totalPrice: string , listingId: bigint, account: Account) => {
+  toWei(totalPrice)
+
+let fee: string;
    
 
    const data = await getListing(listingId);
@@ -15,29 +17,38 @@ let fee: bigint | undefined ;
          console.log(fee); 
    }
    else {
-    fee = undefined;
+    fee = "0";
    }
-
+   
+   const priceInWei = toWei(fee);
   const transaction = prepareContractCall({
   contract: marketContract,
   method: "makeOffer",
-  params: [ {totalPrice: fee!,  duration}, listingId],
-  value: fee
+  params: [ {totalPrice: priceInWei!,  duration}, listingId],
+  value: priceInWei
 
 
 });
 try {
 
-        const { transactionHash } = await sendTransaction({
+        const  transactionReceipt  = await sendAndConfirmTransaction({
         account,
         transaction,
         }); 
-        console.log(transactionHash)
+        // console.log(transactionHash)
 
-        return {
+        if (transactionReceipt.status == "success") {
+            return {
         success: true,
-        message: "Offer sent"
+        message: "Offer sent successfully"
         }
+        }
+        return {
+          success: false,
+          message: "Error sending offer"
+        }
+
+       
 } catch (error: any) {
    let message;
   if (error?.message.includes('__Offer_InvalidListingId')) {
@@ -72,16 +83,21 @@ export const cancelOffer = async (offerId: bigint, listingId: bigint, account: A
 });
 try {
 
-        const { transactionHash } = await sendTransaction({
+        const transactionReceipt = await sendAndConfirmTransaction({
         account,
         transaction,
         }); 
-        console.log(transactionHash)
-
-        return {
+       
+        if (transactionReceipt.status == "success") {
+          return {
         success: true,
-        message: "Offer sent"
+        message: "Offer cancelled"
         }
+        } return {
+          success: false,
+          message: "Error cancelling offer"
+        }
+      
 } catch (error: any) {
    let message;
   if (error?.message.includes('__Offer_InvalidListingId')) {
@@ -117,16 +133,22 @@ export const acceptOffer = async (offerId: bigint, listingId: bigint, account: A
 });
   try {
 
-        const { transactionHash } = await sendTransaction({
+        const  transactionReceipt  = await sendAndConfirmTransaction({
         account,
         transaction,
         }); 
-        console.log(transactionHash)
 
-        return {
+         if (transactionReceipt.status == "success") {
+          return {
         success: true,
         message: "Offer accepted"
         }
+         }
+         return {
+          success: false,
+        message: "Error accepting Offer "
+         }
+        
 } catch (error: any) {
    let message;
   if (error?.message.includes('__Offer_InvalidListingId')) {
@@ -167,16 +189,22 @@ export const rejectOffer = async (offerId: bigint, listingId: bigint, account: A
 });
   try {
 
-        const { transactionHash } = await sendTransaction({
+        
+        const  transactionReceipt  = await sendAndConfirmTransaction({
         account,
         transaction,
         }); 
-        console.log(transactionHash)
 
-        return {
+         if (transactionReceipt.status == "success") {
+          return {
         success: true,
-        message: "Offer accepted"
+        message: "Offer rejected"
         }
+         }
+         return {
+          success: false,
+        message: "Error rejecting Offer "
+         }
 } catch (error: any) {
    let message;
   if (error?.message.includes('__Offer_InvalidListingId')) {

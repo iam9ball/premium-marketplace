@@ -5,6 +5,8 @@ interface CreateListingModalStore {
     isOpen: boolean;
     onOpen: () => void;
     onClose: () => void;
+    setAddress: (value: string) => void;
+    address: string;
    
     
    
@@ -12,8 +14,10 @@ interface CreateListingModalStore {
 
 const useCreateListingModal = create<CreateListingModalStore>((set) => ({
   isOpen: false,
+  address: "",
   onOpen: () => set({ isOpen: true }),
   onClose: () => set({ isOpen: false }),
+  setAddress: (value) => set({address: value})
   
   
   

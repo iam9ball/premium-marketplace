@@ -13,6 +13,10 @@ import createNFT from "@/app/contracts/createNFT";
 import { useActiveAccount } from "thirdweb/react";
 import {showToast} from "../WalletToast";
 import toast from "react-hot-toast";
+import { timeStamp } from "console";
+import { useSWRConfig } from "swr";
+import { useNotifStore } from "@/app/hooks/useNotifStore";
+import { blobUrlToBase64 } from "@/app/utils/blobUrlToBase64";
 
 
 enum  STEPS {
@@ -49,7 +53,8 @@ const CreateNftModal = () => {
     reValidateMode: "onSubmit"
   });
   const [isLoading, setIsLoading] = useState(false);
-
+  const {mutate} = useSWRConfig();
+  const {setNftAddress} = useNotifStore();
 
     
 
@@ -61,17 +66,29 @@ const CreateNftModal = () => {
           if (account) {
               setIsLoading(true);
               try {
-                await createNFT(account, data).then((data:any) =>  { 
+                await createNFT(account, data).then(async(data:any) =>  { 
           
               if(data.success){
                       nftModal.onClose();
                       toast.success(data.message);
+                      const base64Image = await blobUrlToBase64(previewUrl);
+
+                      setNftAddress({
+                        address: data.contractAddress!,
+                        timestamp: Math.floor(Date.now() / 1000),
+                        image: base64Image!,
+                        name: data.name
+                      });
                       reset();
+                      await mutate("notif");
                       setTokenType(undefined);
                       setPreviewUrl("");
                       setOnMarket(true);
                       setStep(STEPS.TOKENTYPE);
-                      onMarket && listingModal.onOpen()
+                     if (onMarket) {
+                      listingModal.onOpen();
+                      listingModal.setAddress(data.contractAddress!)
+                     }
                 
               } else {
                     toast.error(data.message);

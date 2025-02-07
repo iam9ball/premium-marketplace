@@ -18,6 +18,7 @@ import { toEther } from "thirdweb";
 import { useInfiniteScroll } from "../hooks/useInfiniteScroll";
 import useInfiniteScrollMutateStore from "../hooks/useInfiniteScrollMutateStore";
 import { NATIVE_TOKEN } from "../utils/address";
+import authAddress from "../utils/authAddress";
 
 export type ListingItem = {
   key?: string;
@@ -33,6 +34,8 @@ export type ListingItem = {
   listingPlan: number;
 };
 
+
+
 export default function MyListings() {
   const createListingModal = useCreateListingModal();
   const [selectedListing, setSelectedListing] = useState<ListingItem>();
@@ -44,9 +47,9 @@ export default function MyListings() {
 
   const fetchActiveListingsWithCount = async (page: number, size: number) => {
     try {
-      const limitedListing = await getMyListings(
-        "0xfc3c3F0d793EaC242051C98fc0DC9be60f86d964"
-      );
+      const address = await authAddress();
+    
+      const limitedListing = await getMyListings(address!);
       console.log("limitedListing", limitedListing);
       const activeListings: any[] = [];
 
@@ -118,25 +121,21 @@ export default function MyListings() {
               const nft = await fetchNFT(contract, listing);
               const { symbol } = await fetchCurrencyInfo(listing.currency);
 
-            
-
               if (!nft?.metadata) {
                 console.error(
                   "Missing NFT metadata for listing:",
                   listing.listingId
                 );
-                return null;
               }
 
-             
               const listingDetails = {
                 key: listing.listingId.toString(),
-                alt: nft.metadata.name || "NFT",
+                alt: nft?.metadata.name || "NFT",
                 id: listing.tokenId.toString(),
-                src: ipfsToHttp(nft.metadata.image || ""),
+                src: ipfsToHttp(nft?.metadata.image || ""),
                 price: toEther(listing.pricePerToken),
                 listingId: listing.listingId,
-                name: nft.metadata.name || "",
+                name: nft?.metadata.name || "",
                 currency: listing.currency,
                 status: listing.status,
                 symbol: symbol,
@@ -216,7 +215,6 @@ export default function MyListings() {
     };
   }, [mutate]);
 
-  console.log("error", error);
   if (error) return <Error error={error} />;
 
   if (initialLoading || !pages || (isCurrencyLoading && !error)) {

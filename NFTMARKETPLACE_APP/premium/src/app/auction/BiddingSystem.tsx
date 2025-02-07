@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Button from "../components/Button";
 
 interface Bid {
   id: number
@@ -66,12 +67,11 @@ export default function BiddingSystem() {
             className="flex-grow px-4 py-2 rounded-l-md focus:outline-none focus:ring-2 focus:ring-purple-500"
             placeholder="Enter your bid"
           />
-          <button
-            onClick={addBid}
-            className="bg-purple-600 text-white px-4 py-2 rounded-r-md hover:bg-purple-700 transition-colors"
-          >
-            Bid
-          </button>
+          <Button  classNames="bg-purple-600 text-white px-4 py-2 rounded-r-md hover:bg-purple-700 transition-colors" 
+          actionLabel='Bid' 
+           onClick={addBid}
+           />
+           
         </div>
         <div className="relative h-20 overflow-hidden">
           <AnimatePresence>
